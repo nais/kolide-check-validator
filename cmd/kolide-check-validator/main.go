@@ -18,7 +18,7 @@ func init() {
 }
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
+	mainContext, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	kolideApiClient := kac.New(kolideApiToken)
@@ -28,10 +28,13 @@ func main() {
 		select {
 		case <-ticker.C:
 			ticker.Reset(CronInterval)
+
 			var incompleteChecks []kac.Check
+			timeout, cancel := context.WithTimeout(mainContext, 30*time.Second)
 
 			log.Infof("Validate all Kolide checks for severity tag(s)")
-			checks, err := kolideApiClient.GetChecks()
+			checks, err := kolideApiClient.GetChecks(timeout)
+			cancel()
 
 			if err != nil {
 				log.Errorf("get checks: %v", err)
@@ -52,7 +55,7 @@ func main() {
 				// alert Slack
 			}
 
-		case <-ctx.Done():
+		case <-mainContext.Done():
 			return
 		}
 	}

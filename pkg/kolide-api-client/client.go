@@ -1,6 +1,7 @@
 package kolide_api_client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	log "github.com/sirupsen/logrus"
@@ -31,8 +32,8 @@ func New(apiToken string) *KolideClient {
 // get will issue a request for the given path, and provide a response or an error
 // Each request will be tried multiple times if a failure occurs, and rate limiting
 // will be upheld if the response includes a Retry-After header.
-func (kc *KolideClient) get(path string) (*http.Response, error) {
-	request, err := http.NewRequest(http.MethodGet, path, nil)
+func (kc *KolideClient) get(context context.Context, path string) (*http.Response, error) {
+	request, err := http.NewRequestWithContext(context, http.MethodGet, path, nil)
 
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
@@ -65,7 +66,7 @@ func (kc *KolideClient) get(path string) (*http.Response, error) {
 }
 
 // GetChecks will return all checks form the Kolide API
-func (kc *KolideClient) GetChecks() ([]Check, error) {
+func (kc *KolideClient) GetChecks(context context.Context) ([]Check, error) {
 	var checks []Check
 	cursor := ""
 
@@ -80,7 +81,7 @@ func (kc *KolideClient) GetChecks() ([]Check, error) {
 	apiUrl.RawQuery = query.Encode()
 
 	for {
-		response, err := kc.get(apiUrl.String())
+		response, err := kc.get(context, apiUrl.String())
 
 		if err != nil {
 			return nil, fmt.Errorf("get paginated response: %w", err)
