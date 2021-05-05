@@ -1,4 +1,4 @@
-name: "kolide-check-validator CI/CD"
+name: CI/CD
 on: push
 
 env:
