@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const CronInterval = 30 * time.Second
+const CronInterval = 5 * time.Minute
 
 var kolideApiToken string
 
