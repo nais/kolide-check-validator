@@ -15,10 +15,6 @@ var kolideApiToken string
 
 func init() {
 	kolideApiToken = os.Getenv("KOLIDE_API_TOKEN")
-
-	if kolideApiToken == "" {
-		log.Fatalf("KOLIDE_API_TOKEN is required")
-	}
 }
 
 func main() {
