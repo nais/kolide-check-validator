@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
+	sc "github.com/nais/kolide-check-validator/pkg/slack-client"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"strings"
@@ -11,10 +12,14 @@ import (
 
 const CronInterval = 5 * time.Minute
 
-var kolideApiToken string
+var (
+	kolideApiToken string
+	slackWebhook   string
+)
 
 func init() {
 	kolideApiToken = os.Getenv("KOLIDE_API_TOKEN")
+	slackWebhook = os.Getenv("SLACK_WEBHOOK")
 }
 
 func main() {
@@ -22,6 +27,7 @@ func main() {
 	defer cancel()
 
 	kolideApiClient := kac.New(kolideApiToken)
+	slackClient := sc.New(slackWebhook)
 	ticker := time.NewTicker(time.Second * 1)
 
 	for {
@@ -30,7 +36,7 @@ func main() {
 			ticker.Reset(CronInterval)
 
 			var incompleteChecks []kac.Check
-			timeout, cancel := context.WithTimeout(mainContext, 30*time.Second)
+			timeout, cancel := context.WithTimeout(mainContext, 1*time.Minute)
 
 			log.Infof("Validate all Kolide checks for severity tag(s)")
 			checks, err := kolideApiClient.GetChecks(timeout)
@@ -52,7 +58,10 @@ func main() {
 			log.Infof("Found %d incomplete check(s)", len(incompleteChecks))
 
 			if len(incompleteChecks) > 0 {
-				// alert Slack
+				timeout, cancel := context.WithTimeout(mainContext, 1*time.Minute)
+				log.Infof("Send alert to Slack")
+				slackClient.Notify(timeout, incompleteChecks)
+				cancel()
 			}
 
 		case <-mainContext.Done():
