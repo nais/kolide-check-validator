@@ -1,8 +1,25 @@
 package slack_client
 
-import "net/http"
+import (
+	"github.com/hashicorp/go-retryablehttp"
+)
 
 type SlackClient struct {
 	slackWebhook string
-	client       *http.Client
+	client       *retryablehttp.Client
+}
+
+type Text struct {
+	Type  string `json:"type"`
+	Text  string `json:"text"`
+	Emoji *bool  `json:"emoji,omitempty"`
+}
+
+type Block struct {
+	Type string `json:"type"`
+	Text *Text  `json:"text,omitempty"`
+}
+
+type Message struct {
+	Blocks []Block `json:"blocks"`
 }

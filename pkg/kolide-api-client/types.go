@@ -1,10 +1,12 @@
 package kolide_api_client
 
-import "net/http"
+import (
+	"github.com/hashicorp/go-retryablehttp"
+)
 
 type KolideClient struct {
 	baseUrl string
-	client  *http.Client
+	client  *retryablehttp.Client
 }
 
 type Pagination struct {
@@ -15,7 +17,13 @@ type Pagination struct {
 }
 
 type Check struct {
-	Tags []string `json:"tags"`
+	Id                 int      `json:"id"`
+	Name               string   `json:"name"`
+	FailingDeviceCount int      `json:"failing_device_count"`
+	Tags               []string `json:"tags"`
+	Description        string   `json:"description"`
+	Compatibility      []string `json:"compatibility"`
+	Topics             []string `json:"topics"`
 }
 
 type ChecksResponse struct {

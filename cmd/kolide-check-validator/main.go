@@ -23,7 +23,7 @@ func init() {
 }
 
 func main() {
-	mainContext, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	kolideApiClient := kac.New(kolideApiToken)
@@ -34,11 +34,10 @@ func main() {
 		select {
 		case <-ticker.C:
 			ticker.Reset(CronInterval)
-
+			log.Infof("validate Kolide checks")
 			var incompleteChecks []kac.Check
-			timeout, cancel := context.WithTimeout(mainContext, 1*time.Minute)
 
-			log.Infof("Validate all Kolide checks for severity tag(s)")
+			timeout, cancel := context.WithTimeout(ctx, 1*time.Minute)
 			checks, err := kolideApiClient.GetChecks(timeout)
 			cancel()
 
@@ -47,24 +46,25 @@ func main() {
 				continue
 			}
 
-			log.Infof("Fetched %d checks", len(checks))
-
 			for _, check := range checks {
 				if !hasSeverityTag(check) {
 					incompleteChecks = append(incompleteChecks, check)
 				}
 			}
 
-			log.Infof("Found %d incomplete check(s)", len(incompleteChecks))
+			log.Infof("found %d checks (%d incomplete)", len(checks), len(incompleteChecks))
 
 			if len(incompleteChecks) > 0 {
-				timeout, cancel := context.WithTimeout(mainContext, 1*time.Minute)
-				log.Infof("Send alert to Slack")
-				slackClient.Notify(timeout, incompleteChecks)
+				timeout, cancel = context.WithTimeout(ctx, 1*time.Minute)
+				err = slackClient.Notify(timeout, incompleteChecks)
 				cancel()
+
+				if err != nil {
+					log.Errorf("notify Slack: %v", err)
+				}
 			}
 
-		case <-mainContext.Done():
+		case <-ctx.Done():
 			return
 		}
 	}
