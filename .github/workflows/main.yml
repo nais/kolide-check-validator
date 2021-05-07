@@ -2,9 +2,18 @@ name: CI/CD
 on: push
 
 env:
-  IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
+  IMAGE_WITHOUT_TAG: ghcr.io/${{ github.repository }}
 
 jobs:
+  get-image-tag:
+    name: Get Docker image tag
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Output Docker image tag
+        run: echo ::set-output name=tag::$(date "+%Y-%m-%d")-$(git rev-parse --short HEAD)
+
   test-build-and-push:
     name: Test, build and push the Docker image to GHCR
     runs-on: ubuntu-20.04
@@ -20,5 +29,6 @@ jobs:
 
       - name: Build, test and push the Docker image
         run: |
+          IMAGE=${IMAGE_WITHOUT_TAG}:${{ steps.get-image-tag.outputs.tag }}
           docker build --pull --tag ${IMAGE} .
           docker push ${IMAGE}
