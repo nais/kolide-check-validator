@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	ApiBaseUrl = "https://k2.kolide.com/api/v0"
+	ApiBaseUrl           = "https://k2.kolide.com/api/v0"
 	ApiResultsPerRequest = 100
-	MaxHttpRetries = 10
+	MaxHttpRetries       = 10
 )
 
 func New(apiToken string) *KolideClient {
