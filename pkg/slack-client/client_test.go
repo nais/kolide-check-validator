@@ -4,8 +4,8 @@ import "testing"
 
 func Test_mrkdown(t *testing.T) {
 	tests := []struct {
-		name string
-		input string
+		name   string
+		input  string
 		output string
 	}{
 		{
@@ -24,8 +24,8 @@ func Test_mrkdown(t *testing.T) {
 			output: "a string <someurl|with a link>.",
 		},
 		{
-			name:   "paragraphs",
-			input:  "some  new  paragraph.",
+			name:  "paragraphs",
+			input: "some  new  paragraph.",
 			output: `some
 
 new
@@ -33,8 +33,8 @@ new
 paragraph.`,
 		},
 		{
-			name:   "all converesions",
-			input:  "This **is** a [link](url).  New paragraph.",
+			name:  "all conversions",
+			input: "This **is** a [link](url).  New paragraph.",
 			output: `This *is* a <url|link>.
 
 New paragraph.`,
@@ -43,7 +43,7 @@ New paragraph.`,
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := mrkdown(tt.input); got != tt.output {
-				t.Errorf("mrkdown() = %v, want %v", got, tt.output)
+				t.Errorf("mrkdown(%s) = %s, want %s", tt.input, got, tt.output)
 			}
 		})
 	}
@@ -51,8 +51,8 @@ New paragraph.`,
 
 func Test_s(t *testing.T) {
 	tests := []struct {
-		name string
-		input int
+		name   string
+		input  int
 		output string
 	}{
 		{
@@ -69,7 +69,7 @@ func Test_s(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := s(tt.input); got != tt.output {
-				t.Errorf("s() = %v, want %v", got, tt.output)
+				t.Errorf("s(%d) = %s, want %s", tt.input, got, tt.output)
 			}
 		})
 	}
@@ -77,8 +77,8 @@ func Test_s(t *testing.T) {
 
 func Test_na(t *testing.T) {
 	tests := []struct {
-		name string
-		input []string
+		name   string
+		input  []string
 		output string
 	}{
 		{
@@ -95,7 +95,7 @@ func Test_na(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := na(tt.input); got != tt.output {
-				t.Errorf("na(%v) = %v, want %v", tt.input, got, tt.output)
+				t.Errorf("na(%v) = %s, want %v", tt.input, got, tt.output)
 			}
 		})
 	}
