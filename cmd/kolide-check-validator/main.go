@@ -71,15 +71,13 @@ func main() {
 }
 
 func hasSeverityTag(check kac.Check) bool {
+	severityTags := []string{"info", "notice", "warning", "danger", "critical"}
 	for _, tag := range check.Tags {
-		switch strings.ToLower(tag) {
-		case
-			"info",
-			"notice",
-			"warning",
-			"danger",
-			"critical":
-			return true
+		tag = strings.ToLower(tag)
+		for _, severityTag := range severityTags {
+			if tag == severityTag {
+				return true
+			}
 		}
 	}
 
