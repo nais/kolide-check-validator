@@ -17,7 +17,7 @@ const (
 	MaxHttpRetries = 10
 )
 
-func getStandardHttpClient() *http.Client {
+func getHttpClient() *http.Client {
 	retryableClient := retryablehttp.NewClient()
 	retryableClient.Logger = nil
 	retryableClient.RetryMax = MaxHttpRetries
@@ -32,8 +32,8 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	kolideApiClient := kac.New(getStandardHttpClient(), kolideApiToken)
-	slackClient := sc.New(getStandardHttpClient(), slackWebhook)
+	kolideApiClient := kac.New(getHttpClient(), kolideApiToken)
+	slackClient := sc.New(getHttpClient(), slackWebhook)
 	ticker := time.NewTicker(time.Second * 1)
 
 	for {
