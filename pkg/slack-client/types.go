@@ -1,12 +1,12 @@
 package slack_client
 
 import (
-	"github.com/hashicorp/go-retryablehttp"
+	"net/http"
 )
 
 type SlackClient struct {
 	slackWebhook string
-	client       *retryablehttp.Client
+	client       *http.Client
 }
 
 type Text struct {

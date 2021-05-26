@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/hashicorp/go-retryablehttp"
 	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
 	sc "github.com/nais/kolide-check-validator/pkg/slack-client"
 	log "github.com/sirupsen/logrus"
@@ -10,24 +11,27 @@ import (
 	"time"
 )
 
-const CronInterval = 5 * time.Minute
-
-var (
-	kolideApiToken string
-	slackWebhook   string
+const (
+	CronInterval   = 5 * time.Minute
+	MaxHttpRetries = 10
+	Danger = "danger"
 )
 
-func init() {
-	kolideApiToken = os.Getenv("KOLIDE_API_TOKEN")
-	slackWebhook = os.Getenv("SLACK_WEBHOOK")
-}
-
 func main() {
+	kolideApiToken := os.Getenv("KOLIDE_API_TOKEN")
+	slackWebhook := os.Getenv("SLACK_WEBHOOK")
+
+	retryableClient := retryablehttp.NewClient()
+	retryableClient.Logger = nil
+	retryableClient.RetryMax = MaxHttpRetries
+
+	httpClient := retryableClient.StandardClient()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	kolideApiClient := kac.New(kolideApiToken)
-	slackClient := sc.New(slackWebhook)
+	kolideApiClient := kac.New(httpClient, kolideApiToken)
+	slackClient := sc.New(httpClient, slackWebhook)
 	ticker := time.NewTicker(time.Second * 1)
 
 	for {

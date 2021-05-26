@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/go-retryablehttp"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -14,20 +13,19 @@ import (
 const (
 	ApiBaseUrl           = "https://k2.kolide.com/api/v0"
 	ApiResultsPerRequest = 100
-	MaxHttpRetries       = 10
 )
 
-func New(apiToken string) *KolideClient {
-	client := retryablehttp.NewClient()
-	client.HTTPClient = &http.Client{Transport: Transport{
+func New(client *http.Client, apiToken string) *KolideClient {
+	kolideApiTransport := &Transport{
 		apiToken: apiToken,
-	}}
-	client.Logger = nil
-	client.RetryMax = MaxHttpRetries
+		parentTransport: client.Transport,
+	}
 
 	return &KolideClient{
 		baseUrl: ApiBaseUrl,
-		client:  client,
+		client:  &http.Client{
+			Transport: kolideApiTransport,
+		},
 	}
 }
 
@@ -63,12 +61,12 @@ func (kc *KolideClient) GetChecks(ctx context.Context) ([]Check, error) {
 }
 
 func (kc *KolideClient) getPaginatedChecks(ctx context.Context, url *url.URL) ([]Check, string, error) {
-	req, err := retryablehttp.NewRequest(http.MethodGet, url.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, "", fmt.Errorf("create request: %w", err)
 	}
 
-	resp, err := kc.client.Do(req.WithContext(ctx))
+	resp, err := kc.client.Do(req)
 	if err != nil {
 		return nil, "", fmt.Errorf("get paginated response: %w", err)
 	}

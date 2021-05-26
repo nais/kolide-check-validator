@@ -1,12 +1,12 @@
 package kolide_api_client
 
 import (
-	"github.com/hashicorp/go-retryablehttp"
+	"net/http"
 )
 
 type KolideClient struct {
 	baseUrl string
-	client  *retryablehttp.Client
+	client  *http.Client
 }
 
 type Pagination struct {

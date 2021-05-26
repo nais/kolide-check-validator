@@ -1,10 +1,10 @@
 package slack_client
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/go-retryablehttp"
 	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -15,14 +15,12 @@ import (
 
 const MaxHttpRetries = 10
 
-func New(slackWebhook string) *SlackClient {
-	client := retryablehttp.NewClient()
-	client.Logger = nil
-	client.RetryMax = MaxHttpRetries
-
+func New(client *http.Client, slackWebhook string) *SlackClient {
 	return &SlackClient{
 		slackWebhook: slackWebhook,
-		client:       client,
+		client:       &http.Client{
+			Transport: client.Transport,
+		},
 	}
 }
 
@@ -32,12 +30,12 @@ func (sc *SlackClient) Notify(ctx context.Context, checks []kac.Check) error {
 		return fmt.Errorf("get request body: %w", err)
 	}
 
-	req, err := retryablehttp.NewRequest(http.MethodPost, sc.slackWebhook, body)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, sc.slackWebhook, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("create request: %w", err)
 	}
 
-	resp, err := sc.client.Do(req.WithContext(ctx))
+	resp, err := sc.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
