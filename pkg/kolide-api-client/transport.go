@@ -6,7 +6,7 @@ import (
 )
 
 type Transport struct {
-	apiToken string
+	apiToken        string
 	parentTransport http.RoundTripper
 }
 

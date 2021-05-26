@@ -14,7 +14,6 @@ import (
 const (
 	CronInterval   = 5 * time.Minute
 	MaxHttpRetries = 10
-	Danger = "danger"
 )
 
 func main() {

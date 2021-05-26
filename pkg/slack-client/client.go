@@ -18,7 +18,7 @@ const MaxHttpRetries = 10
 func New(client *http.Client, slackWebhook string) *SlackClient {
 	return &SlackClient{
 		slackWebhook: slackWebhook,
-		client:       &http.Client{
+		client: &http.Client{
 			Transport: client.Transport,
 		},
 	}

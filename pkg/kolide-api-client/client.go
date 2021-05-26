@@ -16,14 +16,18 @@ const (
 )
 
 func New(client *http.Client, apiToken string) *KolideClient {
+	return NewConfiguredClient(client, ApiBaseUrl, apiToken)
+}
+
+func NewConfiguredClient(client *http.Client, baseUrl, apiToken string) *KolideClient {
 	kolideApiTransport := &Transport{
-		apiToken: apiToken,
+		apiToken:        apiToken,
 		parentTransport: client.Transport,
 	}
 
 	return &KolideClient{
-		baseUrl: ApiBaseUrl,
-		client:  &http.Client{
+		baseUrl: baseUrl,
+		client: &http.Client{
 			Transport: kolideApiTransport,
 		},
 	}
@@ -74,6 +78,10 @@ func (kc *KolideClient) getPaginatedChecks(ctx context.Context, url *url.URL) ([
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, "", fmt.Errorf("read response body: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, "", fmt.Errorf("unexpected status code: %d (%s)", resp.StatusCode, string(bytes))
 	}
 
 	var checksResponse ChecksResponse
