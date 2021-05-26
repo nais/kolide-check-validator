@@ -6,6 +6,7 @@ import (
 	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
 	sc "github.com/nais/kolide-check-validator/pkg/slack-client"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -16,21 +17,23 @@ const (
 	MaxHttpRetries = 10
 )
 
-func main() {
-	kolideApiToken := os.Getenv("KOLIDE_API_TOKEN")
-	slackWebhook := os.Getenv("SLACK_WEBHOOK")
-
+func getStandardHttpClient() *http.Client {
 	retryableClient := retryablehttp.NewClient()
 	retryableClient.Logger = nil
 	retryableClient.RetryMax = MaxHttpRetries
 
-	httpClient := retryableClient.StandardClient()
+	return retryableClient.StandardClient()
+}
+
+func main() {
+	kolideApiToken := os.Getenv("KOLIDE_API_TOKEN")
+	slackWebhook := os.Getenv("SLACK_WEBHOOK")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	kolideApiClient := kac.New(httpClient, kolideApiToken)
-	slackClient := sc.New(httpClient, slackWebhook)
+	kolideApiClient := kac.New(getStandardHttpClient(), kolideApiToken)
+	slackClient := sc.New(getStandardHttpClient(), slackWebhook)
 	ticker := time.NewTicker(time.Second * 1)
 
 	for {
