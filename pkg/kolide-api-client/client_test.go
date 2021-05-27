@@ -28,6 +28,10 @@ func getTestServer(t *testing.T, pages map[string]string) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
+func getKolideClientForTestServer(server *httptest.Server) *kac.KolideClient {
+	return kac.NewConfiguredClient(server.Client(), server.URL, apiToken)
+}
+
 func TestKolideClient(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
@@ -39,7 +43,7 @@ func TestKolideClient(t *testing.T) {
 
 		testServer := getTestServer(t, pages)
 
-		apiClient := kac.NewConfiguredClient(testServer.Client(), testServer.URL, apiToken)
+		apiClient := getKolideClientForTestServer(testServer)
 
 		checks, err := apiClient.GetChecks(ctx)
 
@@ -54,7 +58,7 @@ func TestKolideClient(t *testing.T) {
 
 		testServer := getTestServer(t, pages)
 
-		apiClient := kac.NewConfiguredClient(testServer.Client(), testServer.URL, apiToken)
+		apiClient := getKolideClientForTestServer(testServer)
 
 		checks, err := apiClient.GetChecks(ctx)
 
@@ -66,7 +70,7 @@ func TestKolideClient(t *testing.T) {
 		mux := http.NewServeMux()
 		testServer := httptest.NewServer(mux)
 
-		apiClient := kac.NewConfiguredClient(testServer.Client(), testServer.URL, apiToken)
+		apiClient := getKolideClientForTestServer(testServer)
 
 		checks, err := apiClient.GetChecks(ctx)
 
@@ -82,7 +86,7 @@ func TestKolideClient(t *testing.T) {
 
 		testServer := getTestServer(t, pages)
 
-		apiClient := kac.NewConfiguredClient(testServer.Client(), testServer.URL, apiToken)
+		apiClient := getKolideClientForTestServer(testServer)
 
 		checks, err := apiClient.GetChecks(ctx)
 
