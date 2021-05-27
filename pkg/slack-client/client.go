@@ -13,18 +13,18 @@ import (
 	"strings"
 )
 
-const MaxHttpRetries = 10
-
 func New(client *http.Client, slackWebhook string) *SlackClient {
 	return &SlackClient{
 		slackWebhook: slackWebhook,
-		client: &http.Client{
-			Transport: client.Transport,
-		},
+		client:       client,
 	}
 }
 
 func (sc *SlackClient) Notify(ctx context.Context, checks []kac.Check) error {
+	if len(checks) == 0 {
+		return fmt.Errorf("no checks")
+	}
+
 	body, err := getRequestBody(checks)
 	if err != nil {
 		return fmt.Errorf("get request body: %w", err)

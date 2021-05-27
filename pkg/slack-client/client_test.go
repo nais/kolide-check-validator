@@ -1,6 +1,16 @@
 package slack_client
 
-import "testing"
+import (
+	"context"
+	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+)
 
 func Test_mrkdown(t *testing.T) {
 	tests := []struct {
@@ -99,4 +109,78 @@ func Test_na(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getSlackClientForTestServer(handler func(writer http.ResponseWriter, request *http.Request)) *SlackClient {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", handler)
+	server := httptest.NewServer(mux)
+
+	return New(server.Client(), server.URL)
+}
+
+func TestSlackClient(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	t.Run("response status not 200 OK", func(t *testing.T) {
+		apiClient := getSlackClientForTestServer(func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(500)
+		})
+
+		err := apiClient.Notify(ctx, []kac.Check{
+			{
+				Name:        "check",
+				Description: "description",
+			},
+		})
+
+		assert.Error(t, err)
+	})
+
+	t.Run("should fail when no checks are passed", func(t *testing.T) {
+		apiClient := getSlackClientForTestServer(func(writer http.ResponseWriter, request *http.Request) {
+			t.Fail()
+		})
+
+		err := apiClient.Notify(ctx, []kac.Check{})
+
+		assert.Error(t, err)
+	})
+
+	t.Run("can notify Slack", func(t *testing.T) {
+		apiClient := getSlackClientForTestServer(func(writer http.ResponseWriter, request *http.Request) {
+			body, err := ioutil.ReadAll(request.Body)
+			assert.NoError(t, err)
+
+			bodyString := string(body)
+
+			assert.True(t, strings.Contains(bodyString, "The following Kolide checks"))
+			assert.True(t, strings.Contains(bodyString, "check 1"))
+			assert.True(t, strings.Contains(bodyString, "description 1"))
+			assert.True(t, strings.Contains(bodyString, "comp 1"))
+			assert.True(t, strings.Contains(bodyString, "topic 1"))
+			assert.True(t, strings.Contains(bodyString, "check 2"))
+			assert.True(t, strings.Contains(bodyString, "description 2"))
+			assert.True(t, strings.Contains(bodyString, "comp 2"))
+			assert.True(t, strings.Contains(bodyString, "topic 2"))
+		})
+
+		err := apiClient.Notify(ctx, []kac.Check{
+			{
+				Name:          "check 1",
+				Description:   "description 1",
+				Compatibility: []string{"comp 1"},
+				Topics:        []string{"topic 1"},
+			},
+			{
+				Name:          "check 2",
+				Description:   "description 2",
+				Compatibility: []string{"comp 2"},
+				Topics:        []string{"topic 2"},
+			},
+		})
+
+		assert.NoError(t, err)
+	})
 }
