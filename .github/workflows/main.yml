@@ -52,7 +52,7 @@ jobs:
           APIKEY: ${{ secrets.NAISDEVICE_DEPLOY_APIKEY }}
           IMAGE: ${{ env.IMAGE_WITHOUT_TAG }}:${{ needs.get-image-tag.outputs.tag }}
           CLUSTER: prod-gcp
-          RESOURCE: ".nais/nais.yml"
+          RESOURCE: ".nais/nais.yml,.nais/netpol.yml"
           VAR: "\
               KOLIDE_API_TOKEN=${{ secrets.KOLIDE_API_TOKEN }},\
               SLACK_WEBHOOK=${{ secrets.SLACK_WEBHOOK }}"
