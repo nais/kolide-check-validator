@@ -36,3 +36,23 @@ jobs:
           IMAGE=${IMAGE_WITHOUT_TAG}:${{ needs.get-image-tag.outputs.tag }}
           docker build --pull --tag ${IMAGE} .
           docker push ${IMAGE}
+
+  deployToProd:
+    name: Deploy to production
+    needs:
+      - get-image-tag
+      - test-build-and-push
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Deploy to prod-gcp
+        uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAISDEVICE_DEPLOY_APIKEY }}
+          IMAGE: ${IMAGE_WITHOUT_TAG}:${{ needs.get-image-tag.outputs.tag }}
+          CLUSTER: prod-gcp
+          RESOURCE: ".nais/nais.yml"
+          VAR: "\
+              KOLIDE_API_TOKEN=${{ secrets.KOLIDE_API_TOKEN }},\
+              SLACK_WEBHOOK=${{ secrets.SLACK_WEBHOOK }}"
