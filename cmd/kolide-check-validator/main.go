@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	CronInterval   = 5 * time.Minute
 	MaxHttpRetries = 10
 )
 
@@ -34,44 +33,33 @@ func main() {
 
 	kolideApiClient := kac.New(getHttpClient(), kolideApiToken)
 	slackClient := sc.New(getHttpClient(), slackWebhook)
-	ticker := time.NewTicker(time.Second * 1)
 
-	for {
-		select {
-		case <-ticker.C:
-			ticker.Reset(CronInterval)
-			log.Infof("validate Kolide checks")
-			var incompleteChecks []kac.Check
+	log.Infof("validate Kolide checks")
+	var incompleteChecks []kac.Check
 
-			timeout, cancel := context.WithTimeout(ctx, 1*time.Minute)
-			checks, err := kolideApiClient.GetChecks(timeout)
-			cancel()
+	timeout, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	checks, err := kolideApiClient.GetChecks(timeout)
+	cancel()
 
-			if err != nil {
-				log.Errorf("get checks: %v", err)
-				continue
-			}
+	if err != nil {
+		log.Fatalf("get checks: %v", err)
+	}
 
-			for _, check := range checks {
-				if !hasSeverityTag(check) {
-					incompleteChecks = append(incompleteChecks, check)
-				}
-			}
+	for _, check := range checks {
+		if !hasSeverityTag(check) {
+			incompleteChecks = append(incompleteChecks, check)
+		}
+	}
 
-			log.Infof("found %d checks (%d incomplete)", len(checks), len(incompleteChecks))
+	log.Infof("found %d checks (%d incomplete)", len(checks), len(incompleteChecks))
 
-			if len(incompleteChecks) > 0 {
-				timeout, cancel = context.WithTimeout(ctx, 1*time.Minute)
-				err = slackClient.Notify(timeout, incompleteChecks)
-				cancel()
+	if len(incompleteChecks) > 0 {
+		timeout, cancel = context.WithTimeout(ctx, 1*time.Minute)
+		err = slackClient.Notify(timeout, incompleteChecks)
+		cancel()
 
-				if err != nil {
-					log.Errorf("notify Slack: %v", err)
-				}
-			}
-
-		case <-ctx.Done():
-			return
+		if err != nil {
+			log.Fatalf("notify Slack: %v", err)
 		}
 	}
 }
