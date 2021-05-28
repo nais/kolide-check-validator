@@ -8,8 +8,8 @@ metadata:
     team: naisdevice
 spec:
   schedule: "*/15 * * * *"
-  startingDeadlineSeconds: 600
-  failedJobsHistoryLimit: 0
+  startingDeadlineSeconds: 300
+  failedJobsHistoryLimit: 1
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
