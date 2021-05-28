@@ -5,6 +5,7 @@ metadata:
   namespace: naisdevice
   labels:
     app: kolide-check-validator
+    team: naisdevice
 spec:
   schedule: "*/15 * * * *"
   startingDeadlineSeconds: 600
@@ -42,6 +43,7 @@ metadata:
   namespace: naisdevice
   labels:
     source: github.com/nais/kolide-check-validator
+    team: naisdevice
 stringData:
   KOLIDE_API_TOKEN: "{{ KOLIDE_API_TOKEN }}"
   SLACK_WEBHOOK: "{{ SLACK_WEBHOOK }}"
