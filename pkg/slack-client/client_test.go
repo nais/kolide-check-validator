@@ -1,8 +1,9 @@
-package slack_client
+package slack_client_test
 
 import (
 	"context"
 	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
+	sc "github.com/nais/kolide-check-validator/pkg/slack-client"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -19,7 +20,7 @@ func Test_mrkdown(t *testing.T) {
 		output string
 	}{
 		{
-			name:   "no mrkdown",
+			name:   "no Mrkdown",
 			input:  "just a string",
 			output: "just a string",
 		},
@@ -52,8 +53,8 @@ New paragraph.`,
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := mrkdown(tt.input); got != tt.output {
-				t.Errorf("mrkdown(%s) = %s, want %s", tt.input, got, tt.output)
+			if got := sc.Mrkdown(tt.input); got != tt.output {
+				t.Errorf("Mrkdown(%s) = %s, want %s", tt.input, got, tt.output)
 			}
 		})
 	}
@@ -78,7 +79,7 @@ func Test_s(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := s(tt.input); got != tt.output {
+			if got := sc.S(tt.input); got != tt.output {
 				t.Errorf("s(%d) = %s, want %s", tt.input, got, tt.output)
 			}
 		})
@@ -104,19 +105,19 @@ func Test_na(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := na(tt.input); got != tt.output {
-				t.Errorf("na(%v) = %s, want %v", tt.input, got, tt.output)
+			if got := sc.NA(tt.input); got != tt.output {
+				t.Errorf("NA(%v) = %s, want %v", tt.input, got, tt.output)
 			}
 		})
 	}
 }
 
-func getSlackClientForTestServer(handler func(writer http.ResponseWriter, request *http.Request)) *SlackClient {
+func getSlackClientForTestServer(handler func(writer http.ResponseWriter, request *http.Request)) *sc.SlackClient {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)
 	server := httptest.NewServer(mux)
 
-	return New(server.Client(), server.URL)
+	return sc.New(server.Client(), server.URL)
 }
 
 func TestSlackClient(t *testing.T) {

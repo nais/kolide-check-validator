@@ -41,12 +41,12 @@ func (sc *SlackClient) Notify(ctx context.Context, checks []kac.Check) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		bytes, err := ioutil.ReadAll(resp.Body)
+		responseBytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			bytes = []byte("unable to read error response body")
+			responseBytes = []byte("unable to read error response body")
 		}
 
-		return fmt.Errorf("unable to notify Slack: HTTP %d: %s", resp.StatusCode, bytes)
+		return fmt.Errorf("unable to notify Slack: HTTP %d: %s", resp.StatusCode, responseBytes)
 	}
 
 	log.Info("Slack has been notified")
@@ -69,10 +69,10 @@ func getRequestBody(checks []kac.Check) ([]byte, error) {
 					check.Id,
 					check.Name,
 					check.FailingDeviceCount,
-					s(check.FailingDeviceCount),
-					mrkdown(check.Description),
-					na(check.Compatibility),
-					na(check.Topics),
+					S(check.FailingDeviceCount),
+					Mrkdown(check.Description),
+					NA(check.Compatibility),
+					NA(check.Topics),
 				),
 			},
 		})
@@ -85,7 +85,7 @@ func getRequestBody(checks []kac.Check) ([]byte, error) {
 				Text: &Text{
 					Type:  "plain_text",
 					Text:  ":warning: The following Kolide checks are missing severity tags: :warning:",
-					Emoji: b(true),
+					Emoji: boolp(true),
 				},
 			},
 		}, blocks...),
@@ -98,24 +98,24 @@ func getRequestBody(checks []kac.Check) ([]byte, error) {
 	return body, nil
 }
 
-func b(b bool) *bool {
+func boolp(b bool) *bool {
 	return &b
 }
 
-func mrkdown(string string) string {
+func Mrkdown(string string) string {
 	bold, _ := regexp.Compile("\\*\\*")
 	string = bold.ReplaceAllString(string, "*")
 
-	links, _ := regexp.Compile("\\[(.*?)\\]\\((.*?)\\)")
+	links, _ := regexp.Compile("\\[(.*?)]\\((.*?)\\)")
 	string = links.ReplaceAllString(string, "<$2|$1>")
 
-	paragraph, _ := regexp.Compile("  ")
+	paragraph, _ := regexp.Compile("[ ]{2}")
 	string = paragraph.ReplaceAllString(string, "\n\n")
 
 	return string
 }
 
-func s(count int) string {
+func S(count int) string {
 	if count == 1 {
 		return ""
 	}
@@ -123,7 +123,7 @@ func s(count int) string {
 	return "s"
 }
 
-func na(list []string) string {
+func NA(list []string) string {
 	joined := strings.Join(list, ", ")
 
 	if joined == "" {
