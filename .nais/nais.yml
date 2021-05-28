@@ -41,8 +41,9 @@ kind: Secret
 metadata:
   name: kolide-check-validator
   namespace: naisdevice
+  annotations:
+    source: "github.com/nais/kolide-check-validator"
   labels:
-    source: github.com/nais/kolide-check-validator
     team: naisdevice
 stringData:
   KOLIDE_API_TOKEN: "{{ KOLIDE_API_TOKEN }}"
