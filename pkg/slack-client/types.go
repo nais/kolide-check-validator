@@ -16,8 +16,9 @@ type Text struct {
 }
 
 type Block struct {
-	Type string `json:"type"`
-	Text *Text  `json:"text,omitempty"`
+	Type     string `json:"type"`
+	Text     *Text  `json:"text,omitempty"`
+	Elements []Text `json:"elements,omitempty"`
 }
 
 type Message struct {
