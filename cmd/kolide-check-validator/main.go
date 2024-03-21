@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
-	"github.com/hashicorp/go-retryablehttp"
-	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
-	sc "github.com/nais/kolide-check-validator/pkg/slack-client"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
+	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
+	sc "github.com/nais/kolide-check-validator/pkg/slack-client"
+	log "github.com/sirupsen/logrus"
 )
 
 const (

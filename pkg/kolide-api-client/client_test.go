@@ -3,12 +3,13 @@ package kolide_api_client_test
 import (
 	"context"
 	"fmt"
-	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
