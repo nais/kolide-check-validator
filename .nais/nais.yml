@@ -16,13 +16,8 @@ spec:
   backoffLimit: 0
   completions: 1
   envFrom:
-    - secretRef:
-      name: kolide-check-validator
+    - secret: kolide-check-validator
   failedJobsHistoryLimit: 1
-  filesFrom:
-  - emptyDir:
-      medium: Memory
-    mountPath: /.config
   image: {{ image }}
   resources:
     requests:
