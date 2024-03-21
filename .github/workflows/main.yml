@@ -14,8 +14,8 @@ jobs:
         id: docker-push
         with:
           team: naisdevice
-          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_
-          identity_provider: ${{ secrets.NAIS_WORKLOAD_
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }} # required, but is defined as an organization variable
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }} # required, but is defined as an organization secret
       - name: Deploy to prod-gcp
         uses: nais/deploy/actions/deploy@v2
         env:
