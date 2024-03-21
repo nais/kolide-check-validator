@@ -7,7 +7,7 @@ env:
 jobs:
   get-image-tag:
     name: Get Docker image tag
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.get-image-tag.outputs.tag }}
     steps:
@@ -20,7 +20,7 @@ jobs:
   test-build-and-push:
     name: Test, build and push the Docker image to GHCR
     needs: get-image-tag
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
@@ -42,7 +42,7 @@ jobs:
     needs:
       - get-image-tag
       - test-build-and-push
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 

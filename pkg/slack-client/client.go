@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
-	log "github.com/sirupsen/logrus"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
+
+	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
+	log "github.com/sirupsen/logrus"
 )
 
 func New(client *http.Client, slackWebhook string) *SlackClient {
@@ -43,7 +44,7 @@ func (sc *SlackClient) Notify(ctx context.Context, checks []kac.Check) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		responseBytes, err := ioutil.ReadAll(resp.Body)
+		responseBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
 			responseBytes = []byte("unable to read error response body")
 		}
@@ -115,10 +116,10 @@ func boolp(b bool) *bool {
 }
 
 func Mrkdown(string string) string {
-	bold, _ := regexp.Compile("\\*\\*")
+	bold, _ := regexp.Compile(`\*\*`)
 	string = bold.ReplaceAllString(string, "*")
 
-	links, _ := regexp.Compile("\\[(.*?)]\\((.*?)\\)")
+	links, _ := regexp.Compile(`\[(.*?)\]\((.*?)\)`)
 	string = links.ReplaceAllString(string, "<$2|$1>")
 
 	paragraph, _ := regexp.Compile("[ ]{2}")

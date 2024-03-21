@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -75,7 +75,7 @@ func (kc *KolideClient) getPaginatedChecks(ctx context.Context, url *url.URL) ([
 		return nil, "", fmt.Errorf("get paginated response: %w", err)
 	}
 
-	bytes, err := ioutil.ReadAll(resp.Body)
+	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, "", fmt.Errorf("read response body: %w", err)
 	}

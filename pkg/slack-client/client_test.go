@@ -2,15 +2,16 @@ package slack_client_test
 
 import (
 	"context"
-	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
-	sc "github.com/nais/kolide-check-validator/pkg/slack-client"
-	"github.com/stretchr/testify/assert"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
+	sc "github.com/nais/kolide-check-validator/pkg/slack-client"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_mrkdown(t *testing.T) {
@@ -151,7 +152,7 @@ func TestSlackClient(t *testing.T) {
 
 	t.Run("can notify Slack", func(t *testing.T) {
 		apiClient := getSlackClientForTestServer(func(writer http.ResponseWriter, request *http.Request) {
-			body, err := ioutil.ReadAll(request.Body)
+			body, err := io.ReadAll(request.Body)
 			assert.NoError(t, err)
 
 			bodyString := string(body)

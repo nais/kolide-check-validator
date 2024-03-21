@@ -1,6 +1,6 @@
 module github.com/nais/kolide-check-validator
 
-go 1.20
+go 1.22
 
 require (
 	github.com/hashicorp/go-retryablehttp v0.7.0
