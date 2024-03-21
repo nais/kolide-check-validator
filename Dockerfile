@@ -5,7 +5,7 @@ RUN curl -sSLo /tmp/linkerd-await https://github.com/linkerd/linkerd-await/relea
     chmod 755 /tmp/linkerd-await
 
 # build app
-FROM golang:1.16-alpine as builder
+FROM golang:1.22-alpine as builder
 ENV GOOS=linux
 ENV CGO_ENABLED=0
 ENV GO111MODULE=on
