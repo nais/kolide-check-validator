@@ -15,7 +15,7 @@ RUN go test -v ./...
 RUN go build -a -o ./bin/kolide-check-validator ./cmd/kolide-check-validator
 
 # package in runtime image
-FROM alpine:3.13
+FROM alpine:3.19
 WORKDIR /app
 COPY --from=linkerd /tmp/linkerd-await /linkerd-await
 COPY --from=builder /src/bin/kolide-check-validator /app/kolide-check-validator
