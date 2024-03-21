@@ -1,5 +1,5 @@
-apiVersion: batch/v1beta1
-kind: CronJob
+apiVersion: nais.io/v1
+kind: Naisjob
 metadata:
   name: kolide-check-validator
   namespace: naisdevice
@@ -7,34 +7,35 @@ metadata:
     app: kolide-check-validator
     team: naisdevice
 spec:
-  schedule: "*/15 * * * *"
-  startingDeadlineSeconds: 300
+  accessPolicy:
+    outbound:
+      external:
+      - host: slack.com
+      - host: hooks.slack.com
+      - host: k2.kolide.com
+  backoffLimit: 0
+  completions: 1
+  envFrom:
+    - secretRef:
+      name: kolide-check-validator
   failedJobsHistoryLimit: 1
-  concurrencyPolicy: Forbid
-  jobTemplate:
-    spec:
-      ttlSecondsAfterFinished: 3600
-      backoffLimit: 0
-      template:
-        metadata:
-          labels:
-            app: kolide-check-validator
-        spec:
-          restartPolicy: Never
-          activeDeadlineSeconds: 300
-          containers:
-            - name: kolide-check-validator
-              image: {{ image }}
-              envFrom:
-                - secretRef:
-                    name: kolide-check-validator
-              resources:
-                requests:
-                  memory: "128Mi"
-                  cpu: "250m"
-                limits:
-                  memory: "256Mi"
-                  cpu: "500m"
+  filesFrom:
+  - emptyDir:
+      medium: Memory
+    mountPath: /.config
+  image: {{ image }}
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "250m"
+    limits:
+      memory: "256Mi"
+      cpu: "500m"
+  restartPolicy: Never
+  schedule: "*/15 * * * *"
+  skipCaBundle: true
+  successfulJobsHistoryLimit: 1
+  timeZone: Europe/Oslo
 ---
 apiVersion: v1
 kind: Secret
