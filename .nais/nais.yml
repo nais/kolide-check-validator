@@ -45,26 +45,26 @@ stringData:
   KOLIDE_API_TOKEN: "{{ KOLIDE_API_TOKEN }}"
   SLACK_WEBHOOK: "{{ SLACK_WEBHOOK }}"
 ---
-apiVersion: nais.io/v1
-kind: Alert
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
 metadata:
-  name: kolide-check-validator
-  namespace: naisdevice
   labels:
     team: naisdevice
+  name: kolide-check-validator
+  namespace: naisdevice
 spec:
-  receivers:
-    slack:
-      channel: '#naisdevice-kolide-admin'
-  alerts:
+  groups:
+  - name: kolide-check-validator
+    rules:
     - alert: kolide-check-validator has not run for 30 minutes
+      annotations:
+        action: |
+          Check if CronJob -> Job -> pod has run successfully:
+          - `kubectl describe cronjob -n naisdevice kolide-check-validator`
+          - `kubectl describe pod -n naisdevice -l app=kolide-check-validator`
+          - `kubectl logs -n naisdevice -l app=kolide-check-validator -c kolide-check-validator --prefix=true`
       expr: 'time() - max(kube_job_status_completion_time{job_name=~"kolide-check-validator-.+"}) > (60*30)'
-      description: "Job is scheduled to run every 15 minutes, and is responsible for validating Kolide checks for severity tags"
-      action: |
-        Check if CronJob -> Job -> pod has run successfully:
-        - `kubectl describe cronjob -n naisdevice kolide-check-validator`
-        - `kubectl describe pod -n naisdevice -l app=kolide-check-validator`
-        - `kubectl logs -n naisdevice -l app=kolide-check-validator -c kolide-check-validator --prefix=true`
-      sla: respond within office hours
-      severity: warning
       for: 1m
+      labels:
+        namespace: naisdevice
+        severity: warning
