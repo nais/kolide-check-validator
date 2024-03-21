@@ -19,10 +19,6 @@ jobs:
       - name: Deploy to prod-gcp
         uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.NAISDEVICE_DEPLOY_APIKEY }}
           IMAGE: ${{ steps.docker-push.outputs.image }}
           CLUSTER: prod-gcp
           RESOURCE: ".nais/nais.yml"
-          VAR: "\
-              KOLIDE_API_TOKEN=${{ secrets.KOLIDE_API_TOKEN }},\
-              SLACK_WEBHOOK=${{ secrets.SLACK_WEBHOOK }}"

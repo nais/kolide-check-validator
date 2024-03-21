@@ -32,19 +32,6 @@ spec:
   successfulJobsHistoryLimit: 1
   timeZone: Europe/Oslo
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: kolide-check-validator
-  namespace: naisdevice
-  annotations:
-    source: "github.com/nais/kolide-check-validator"
-  labels:
-    team: naisdevice
-stringData:
-  KOLIDE_API_TOKEN: "{{ KOLIDE_API_TOKEN }}"
-  SLACK_WEBHOOK: "{{ SLACK_WEBHOOK }}"
----
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
