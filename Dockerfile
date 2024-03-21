@@ -5,7 +5,7 @@ RUN curl -sSLo /tmp/linkerd-await https://github.com/linkerd/linkerd-await/relea
     chmod 755 /tmp/linkerd-await
 
 # build app
-FROM golang:1.16-alpine as builder
+FROM golang:1.22-alpine as builder
 ENV GOOS=linux
 ENV CGO_ENABLED=0
 ENV GO111MODULE=on
@@ -15,7 +15,7 @@ RUN go test -v ./...
 RUN go build -a -o ./bin/kolide-check-validator ./cmd/kolide-check-validator
 
 # package in runtime image
-FROM alpine:3.13
+FROM gcr.io/distroless/base
 WORKDIR /app
 COPY --from=linkerd /tmp/linkerd-await /linkerd-await
 COPY --from=builder /src/bin/kolide-check-validator /app/kolide-check-validator
