@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
+	kac "github.com/navikt/kolide-check-validator/pkg/kolide-api-client"
 	"github.com/stretchr/testify/assert"
 )
 

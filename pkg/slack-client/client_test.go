@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
-	sc "github.com/nais/kolide-check-validator/pkg/slack-client"
+	kac "github.com/navikt/kolide-check-validator/pkg/kolide-api-client"
+	sc "github.com/navikt/kolide-check-validator/pkg/slack-client"
 	"github.com/stretchr/testify/assert"
 )
 

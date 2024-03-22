@@ -1,4 +1,4 @@
-all: fmt test build
+all: fmt test build check
 
 fmt:
 	go run mvdan.cc/gofumpt@latest -w ./

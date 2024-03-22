@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
-	sc "github.com/nais/kolide-check-validator/pkg/slack-client"
+	kac "github.com/navikt/kolide-check-validator/pkg/kolide-api-client"
+	sc "github.com/navikt/kolide-check-validator/pkg/slack-client"
 	log "github.com/sirupsen/logrus"
 )
 
