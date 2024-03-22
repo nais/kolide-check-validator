@@ -11,6 +11,8 @@ import (
 
 	kac "github.com/navikt/kolide-check-validator/pkg/kolide-api-client"
 	sc "github.com/navikt/kolide-check-validator/pkg/slack-client"
+	"github.com/sirupsen/logrus"
+	logrustest "github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -113,22 +115,23 @@ func Test_na(t *testing.T) {
 	}
 }
 
-func getSlackClientForTestServer(handler func(writer http.ResponseWriter, request *http.Request)) *sc.SlackClient {
+func getSlackClientForTestServer(handler func(writer http.ResponseWriter, request *http.Request), log logrus.FieldLogger) *sc.SlackClient {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)
 	server := httptest.NewServer(mux)
 
-	return sc.New(server.Client(), server.URL)
+	return sc.New(server.Client(), server.URL, log)
 }
 
 func TestSlackClient(t *testing.T) {
+	log, _ := logrustest.NewNullLogger()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
 	t.Run("response status not 200 OK", func(t *testing.T) {
 		apiClient := getSlackClientForTestServer(func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(500)
-		})
+		}, log)
 
 		err := apiClient.Notify(ctx, []kac.Check{
 			{
@@ -143,7 +146,7 @@ func TestSlackClient(t *testing.T) {
 	t.Run("should fail when no checks are passed", func(t *testing.T) {
 		apiClient := getSlackClientForTestServer(func(writer http.ResponseWriter, request *http.Request) {
 			t.Fail()
-		})
+		}, log)
 
 		err := apiClient.Notify(ctx, []kac.Check{})
 
@@ -166,7 +169,7 @@ func TestSlackClient(t *testing.T) {
 			assert.True(t, strings.Contains(bodyString, "description 2"))
 			assert.True(t, strings.Contains(bodyString, "comp 2"))
 			assert.True(t, strings.Contains(bodyString, "topic 2"))
-		})
+		}, log)
 
 		err := apiClient.Notify(ctx, []kac.Check{
 			{

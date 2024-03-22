@@ -9,6 +9,8 @@ import (
 	"time"
 
 	kac "github.com/navikt/kolide-check-validator/pkg/kolide-api-client"
+	"github.com/sirupsen/logrus"
+	logrustest "github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,11 +29,13 @@ func getTestServer(t *testing.T, pages map[string]string) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-func getKolideClientForTestServer(server *httptest.Server) *kac.KolideClient {
-	return kac.NewConfiguredClient(server.Client(), server.URL, apiToken)
+func getKolideClientForTestServer(server *httptest.Server, log logrus.FieldLogger) *kac.KolideClient {
+	return kac.NewConfiguredClient(server.Client(), server.URL, apiToken, log)
 }
 
 func TestKolideClient(t *testing.T) {
+	log, _ := logrustest.NewNullLogger()
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
@@ -42,7 +46,7 @@ func TestKolideClient(t *testing.T) {
 
 		testServer := getTestServer(t, pages)
 
-		apiClient := getKolideClientForTestServer(testServer)
+		apiClient := getKolideClientForTestServer(testServer, log)
 
 		checks, err := apiClient.GetChecks(ctx)
 
@@ -57,7 +61,7 @@ func TestKolideClient(t *testing.T) {
 
 		testServer := getTestServer(t, pages)
 
-		apiClient := getKolideClientForTestServer(testServer)
+		apiClient := getKolideClientForTestServer(testServer, log)
 
 		checks, err := apiClient.GetChecks(ctx)
 
@@ -69,7 +73,7 @@ func TestKolideClient(t *testing.T) {
 		mux := http.NewServeMux()
 		testServer := httptest.NewServer(mux)
 
-		apiClient := getKolideClientForTestServer(testServer)
+		apiClient := getKolideClientForTestServer(testServer, log)
 
 		checks, err := apiClient.GetChecks(ctx)
 
@@ -85,7 +89,7 @@ func TestKolideClient(t *testing.T) {
 
 		testServer := getTestServer(t, pages)
 
-		apiClient := getKolideClientForTestServer(testServer)
+		apiClient := getKolideClientForTestServer(testServer, log)
 
 		checks, err := apiClient.GetChecks(ctx)
 

@@ -11,17 +11,18 @@ import (
 	"strings"
 
 	kac "github.com/navikt/kolide-check-validator/pkg/kolide-api-client"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
-func New(client *http.Client, slackWebhook string) *SlackClient {
+func New(client *http.Client, slackWebhook string, log logrus.FieldLogger) *SlackClient {
 	return &SlackClient{
 		slackWebhook: slackWebhook,
 		client:       client,
+		log:          log,
 	}
 }
 
-func (sc *SlackClient) Notify(ctx context.Context, checks []kac.Check) error {
+func (c *SlackClient) Notify(ctx context.Context, checks []kac.Check) error {
 	if len(checks) == 0 {
 		return fmt.Errorf("no checks")
 	}
@@ -31,14 +32,14 @@ func (sc *SlackClient) Notify(ctx context.Context, checks []kac.Check) error {
 		return fmt.Errorf("get request body: %w", err)
 	}
 
-	log.Infof("request payload for notification: %s", body)
+	c.log.Infof("request payload for notification: %s", body)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, sc.slackWebhook, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.slackWebhook, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("create request: %w", err)
 	}
 
-	resp, err := sc.client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
@@ -52,7 +53,7 @@ func (sc *SlackClient) Notify(ctx context.Context, checks []kac.Check) error {
 		return fmt.Errorf("unable to notify Slack: HTTP %d: %s", resp.StatusCode, responseBytes)
 	}
 
-	log.Info("Slack has been notified")
+	c.log.Info("Slack has been notified")
 
 	return nil
 }

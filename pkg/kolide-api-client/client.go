@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -15,14 +17,15 @@ const (
 	ApiResultsPerRequest = 100
 )
 
-func New(client *http.Client, apiToken string) *KolideClient {
-	return NewConfiguredClient(client, ApiBaseUrl, apiToken)
+func New(client *http.Client, apiToken string, log logrus.FieldLogger) *KolideClient {
+	return NewConfiguredClient(client, ApiBaseUrl, apiToken, log)
 }
 
-func NewConfiguredClient(client *http.Client, baseUrl, apiToken string) *KolideClient {
+func NewConfiguredClient(client *http.Client, baseUrl, apiToken string, log logrus.FieldLogger) *KolideClient {
 	kolideApiTransport := &Transport{
 		apiToken:        apiToken,
 		parentTransport: client.Transport,
+		log:             log,
 	}
 
 	return &KolideClient{

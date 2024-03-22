@@ -2,11 +2,14 @@ package slack_client
 
 import (
 	"net/http"
+
+	"github.com/sirupsen/logrus"
 )
 
 type SlackClient struct {
 	slackWebhook string
 	client       *http.Client
+	log          logrus.FieldLogger
 }
 
 type Text struct {

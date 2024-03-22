@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -9,49 +10,56 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	kac "github.com/navikt/kolide-check-validator/pkg/kolide-api-client"
 	sc "github.com/navikt/kolide-check-validator/pkg/slack-client"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 const (
-	MaxHttpRetries = 10
+	exitSuccess = iota
+	exitRunError
 )
 
-func getHttpClient() *http.Client {
-	retryableClient := retryablehttp.NewClient()
-	retryableClient.Logger = nil
-	retryableClient.RetryMax = MaxHttpRetries
+func main() {
+	ctx := context.Background()
 
-	return retryableClient.StandardClient()
+	log := logrus.StandardLogger()
+	if err := run(ctx, log); err != nil {
+		log.WithError(err).Errorf("error in run: %v", err)
+		os.Exit(exitRunError)
+	}
+
+	os.Exit(exitSuccess)
 }
 
-func main() {
+func run(ctx context.Context, log logrus.FieldLogger) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	kolideApiToken := os.Getenv("KOLIDE_API_TOKEN")
 	slackWebhook := os.Getenv("SLACK_WEBHOOK")
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	kolideApiClient := kac.New(getHttpClient(), kolideApiToken)
-	slackClient := sc.New(getHttpClient(), slackWebhook)
+	kolideApiClient := kac.New(getHttpClient(log), kolideApiToken, log.WithField("client", "Kolide"))
+	slackClient := sc.New(getHttpClient(log), slackWebhook, log.WithField("client", "Slack"))
 
 	log.Infof("validate Kolide checks")
-	var incompleteChecks []kac.Check
-
 	timeout, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	checks, err := kolideApiClient.GetChecks(timeout)
 	cancel()
 
 	if err != nil {
-		log.Fatalf("get checks: %v", err)
+		return fmt.Errorf("get Kolide checks: %w", err)
 	}
 
+	incompleteChecks := make([]kac.Check, 0)
 	for _, check := range checks {
 		if !check.HasSeverityTag() {
 			incompleteChecks = append(incompleteChecks, check)
 		}
 	}
 
-	log.Infof("found %d checks (%d incomplete)", len(checks), len(incompleteChecks))
+	log.
+		WithField("num_checks", len(checks)).
+		WithField("num_incomplete_checks", len(incompleteChecks)).
+		Infof("validated Kolide checks")
 
 	if len(incompleteChecks) > 0 {
 		timeout, cancel = context.WithTimeout(ctx, 1*time.Minute)
@@ -59,7 +67,16 @@ func main() {
 		cancel()
 
 		if err != nil {
-			log.Fatalf("notify Slack: %v", err)
+			return fmt.Errorf("notify Slack: %w", err)
 		}
 	}
+
+	return nil
+}
+
+func getHttpClient(log logrus.FieldLogger) *http.Client {
+	retryableClient := retryablehttp.NewClient()
+	retryableClient.Logger = log
+	retryableClient.RetryMax = 10
+	return retryableClient.StandardClient()
 }

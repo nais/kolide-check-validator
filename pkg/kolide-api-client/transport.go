@@ -3,11 +3,14 @@ package kolide_api_client
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Transport struct {
 	apiToken        string
 	parentTransport http.RoundTripper
+	log             logrus.FieldLogger
 }
 
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
