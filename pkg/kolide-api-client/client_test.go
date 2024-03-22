@@ -12,9 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	apiToken = "test token"
-)
+var apiToken = "test token"
 
 func getTestServer(t *testing.T, pages map[string]string) *httptest.Server {
 	mux := http.NewServeMux()

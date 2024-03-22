@@ -1,8 +1,9 @@
 package main
 
 import (
-	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
 	"testing"
+
+	kac "github.com/nais/kolide-check-validator/pkg/kolide-api-client"
 )
 
 func Test_hasSeverityTag(t *testing.T) {

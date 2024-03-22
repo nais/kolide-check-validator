@@ -103,7 +103,6 @@ func getRequestBody(checks []kac.Check) ([]byte, error) {
 			},
 		}, blocks...),
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("encode request body: %w", err)
 	}

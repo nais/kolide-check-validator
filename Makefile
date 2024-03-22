@@ -1,7 +1,7 @@
-all: format test build
+all: fmt test build
 
-format:
-	gofmt -s -w .
+fmt:
+	go run mvdan.cc/gofumpt@latest -w ./
 
 test:
 	go test -v ./...
@@ -21,5 +21,3 @@ vulncheck:
 deadcode:
 	go run golang.org/x/tools/cmd/deadcode@latest -test ./...
 
-fmt:
-	go run mvdan.cc/gofumpt@latest -w ./
