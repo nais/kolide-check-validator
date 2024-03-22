@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	kac "github.com/navikt/kolide-check-validator/pkg/kolide-api-client"
+	kac "github.com/navikt/kolide-check-validator/internal/kolide-api-client"
 	"github.com/sirupsen/logrus"
 )
 

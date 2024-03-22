@@ -3,7 +3,7 @@ package kolide_api_client_test
 import (
 	"testing"
 
-	kac "github.com/navikt/kolide-check-validator/pkg/kolide-api-client"
+	kac "github.com/navikt/kolide-check-validator/internal/kolide-api-client"
 )
 
 func TestCheck_HasSeverityTag(t *testing.T) {
