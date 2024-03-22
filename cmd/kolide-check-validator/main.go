@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -47,7 +46,7 @@ func main() {
 	}
 
 	for _, check := range checks {
-		if !hasSeverityTag(check) {
+		if !check.HasSeverityTag() {
 			incompleteChecks = append(incompleteChecks, check)
 		}
 	}
@@ -63,18 +62,4 @@ func main() {
 			log.Fatalf("notify Slack: %v", err)
 		}
 	}
-}
-
-func hasSeverityTag(check kac.Check) bool {
-	severityTags := []string{"info", "notice", "warning", "danger", "critical"}
-	for _, tag := range check.Tags {
-		tag = strings.ToLower(tag)
-		for _, severityTag := range severityTags {
-			if tag == severityTag {
-				return true
-			}
-		}
-	}
-
-	return false
 }

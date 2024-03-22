@@ -1,4 +1,4 @@
-package main
+package kolide_api_client_test
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 	kac "github.com/navikt/kolide-check-validator/pkg/kolide-api-client"
 )
 
-func Test_hasSeverityTag(t *testing.T) {
+func TestCheck_HasSeverityTag(t *testing.T) {
 	tests := []struct {
 		name           string
 		check          kac.Check
@@ -36,8 +36,8 @@ func Test_hasSeverityTag(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := hasSeverityTag(tt.check); got != tt.hasSeverityTag {
-				t.Errorf("hasSeverityTag(%v) = %v, expected %v", tt.check.Tags, got, tt.hasSeverityTag)
+			if got := tt.check.HasSeverityTag(); got != tt.hasSeverityTag {
+				t.Errorf("HasSeverityTag(%v) = %v, expected %v", tt.check.Tags, got, tt.hasSeverityTag)
 			}
 		})
 	}

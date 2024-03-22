@@ -2,6 +2,7 @@ package kolide_api_client
 
 import (
 	"net/http"
+	"strings"
 )
 
 type KolideClient struct {
@@ -24,6 +25,24 @@ type Check struct {
 	Description        string   `json:"description"`
 	Compatibility      []string `json:"compatibility"`
 	Topics             []string `json:"topics"`
+}
+
+func (c *Check) HasSeverityTag() bool {
+	if c == nil {
+		return false
+	}
+
+	severityTags := []string{"info", "notice", "warning", "danger", "critical"}
+	for _, tag := range c.Tags {
+		tag = strings.ToLower(tag)
+		for _, severityTag := range severityTags {
+			if tag == severityTag {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 type ChecksResponse struct {
