@@ -14,12 +14,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func New(client *http.Client, slackWebhook string, log logrus.FieldLogger) *SlackClient {
-	return &SlackClient{
+func New(slackWebhook string, log logrus.FieldLogger, opts ...Option) *SlackClient {
+	c := &SlackClient{
 		slackWebhook: slackWebhook,
-		client:       client,
+		client:       http.DefaultClient,
 		log:          log,
 	}
+
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	return c
 }
 
 func (c *SlackClient) Notify(ctx context.Context, checks []kac.Check) error {

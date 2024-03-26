@@ -120,7 +120,7 @@ func getSlackClientForTestServer(handler func(writer http.ResponseWriter, reques
 	mux.HandleFunc("/", handler)
 	server := httptest.NewServer(mux)
 
-	return sc.New(server.Client(), server.URL, log)
+	return sc.New(server.URL, log, sc.WithHttpClient(server.Client()))
 }
 
 func TestSlackClient(t *testing.T) {
