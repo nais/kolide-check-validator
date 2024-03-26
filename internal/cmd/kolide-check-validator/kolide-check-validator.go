@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
 	kac "github.com/navikt/kolide-check-validator/internal/kolide-api-client"
@@ -63,15 +62,17 @@ func run(ctx context.Context, cfg *Config, log logrus.FieldLogger) error {
 	}
 
 	if len(incompleteChecks) == 0 {
-		log.Infof("all Kolide checks are valid")
+		log.Infof("all Kolide checks are valid, no notification sent")
 		return nil
 	}
 
-	slackClient := sc.New(cfg.SlackWebhook, log.WithField("client", "Slack"), sc.WithHttpClient(getHttpClient()))
-	timeout, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	err = slackClient.Notify(timeout, incompleteChecks)
-	cancel()
-
+	err = sc.
+		New(
+			cfg.SlackWebhook,
+			log.WithField("client", "Slack"),
+			sc.WithHttpClient(getHttpClient()),
+		).
+		Notify(ctx, incompleteChecks)
 	if err != nil {
 		return fmt.Errorf("notify Slack: %w", err)
 	}

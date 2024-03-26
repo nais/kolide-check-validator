@@ -89,7 +89,7 @@ func Test_s(t *testing.T) {
 	}
 }
 
-func Test_na(t *testing.T) {
+func Test_Join(t *testing.T) {
 	tests := []struct {
 		name   string
 		input  []string
@@ -98,7 +98,7 @@ func Test_na(t *testing.T) {
 		{
 			name:   "empty list",
 			input:  nil,
-			output: "N/A",
+			output: "None",
 		},
 		{
 			name:   "list with entries",
@@ -108,8 +108,8 @@ func Test_na(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := sc.NA(tt.input); got != tt.output {
-				t.Errorf("NA(%v) = %s, want %v", tt.input, got, tt.output)
+			if got := sc.Join(tt.input); got != tt.output {
+				t.Errorf("Join(%v) = %s, want %v", tt.input, got, tt.output)
 			}
 		})
 	}
