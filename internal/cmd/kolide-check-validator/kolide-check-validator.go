@@ -56,7 +56,7 @@ func run(ctx context.Context, cfg *Config, log logrus.FieldLogger) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	kolideApiClient := kac.New(getHttpClient(log), cfg.KolideApiToken, log.WithField("client", "Kolide"))
+	kolideApiClient := kac.New(cfg.KolideApiToken, log.WithField("client", "Kolide"), kac.WithHttpClient(getHttpClient(log)))
 	slackClient := sc.New(getHttpClient(log), cfg.SlackWebhook, log.WithField("client", "Slack"))
 
 	log.Infof("validate Kolide checks")

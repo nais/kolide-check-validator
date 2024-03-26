@@ -19,7 +19,7 @@ var apiToken = "test token"
 func getTestServer(t *testing.T, pages map[string]string) *httptest.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/checks", func(writer http.ResponseWriter, request *http.Request) {
-		assert.Equal(t, fmt.Sprintf("Bearer %s", apiToken), request.Header.Get("Authorization"))
+		assert.Equal(t, "Bearer "+apiToken, request.Header.Get("Authorization"))
 
 		cursor := request.URL.Query().Get("cursor")
 
@@ -30,7 +30,7 @@ func getTestServer(t *testing.T, pages map[string]string) *httptest.Server {
 }
 
 func getKolideClientForTestServer(server *httptest.Server, log logrus.FieldLogger) *kac.KolideClient {
-	return kac.NewConfiguredClient(server.Client(), server.URL, apiToken, log)
+	return kac.New(apiToken, log, kac.WithHttpClient(server.Client()), kac.WithBaseUrl(server.URL))
 }
 
 func TestKolideClient(t *testing.T) {

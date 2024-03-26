@@ -1,13 +1,15 @@
 package kolide_api_client
 
 import (
-	"net/http"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 type KolideClient struct {
 	baseUrl string
-	client  *http.Client
+	client  *httpClient
+	log     logrus.FieldLogger
 }
 
 type Pagination struct {

@@ -12,42 +12,34 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const (
-	ApiBaseUrl           = "https://k2.kolide.com/api/v0"
-	ApiResultsPerRequest = 100
-)
-
-func New(client *http.Client, apiToken string, log logrus.FieldLogger) *KolideClient {
-	return NewConfiguredClient(client, ApiBaseUrl, apiToken, log)
-}
-
-func NewConfiguredClient(client *http.Client, baseUrl, apiToken string, log logrus.FieldLogger) *KolideClient {
-	kolideApiTransport := &Transport{
-		apiToken:        apiToken,
-		parentTransport: client.Transport,
-		log:             log,
-	}
-
-	return &KolideClient{
-		baseUrl: baseUrl,
-		client: &http.Client{
-			Transport: kolideApiTransport,
+func New(apiToken string, log logrus.FieldLogger, opts ...Option) *KolideClient {
+	c := &KolideClient{
+		baseUrl: "https://k2.kolide.com/api/v0",
+		client: &httpClient{
+			client:   http.DefaultClient,
+			apiToken: apiToken,
 		},
+		log: log,
 	}
+
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	return c
 }
 
 func (kc *KolideClient) GetChecks(ctx context.Context) ([]Check, error) {
-	var checks []Check
-
-	apiUrl, err := url.Parse(fmt.Sprintf("%s/checks", kc.baseUrl))
+	apiUrl, err := url.Parse(kc.baseUrl + "/checks")
 	if err != nil {
 		return nil, fmt.Errorf("create URL: %w", err)
 	}
 
 	query := apiUrl.Query()
-	query.Set("per_page", strconv.Itoa(ApiResultsPerRequest))
+	query.Set("per_page", strconv.Itoa(100))
 	apiUrl.RawQuery = query.Encode()
 
+	checks := make([]Check, 0)
 	for {
 		paginatedChecks, nextCursor, err := kc.getPaginatedChecks(ctx, apiUrl)
 		if err != nil {
@@ -87,10 +79,8 @@ func (kc *KolideClient) getPaginatedChecks(ctx context.Context, url *url.URL) ([
 		return nil, "", fmt.Errorf("unexpected status code: %d (%s)", resp.StatusCode, string(bytes))
 	}
 
-	var checksResponse ChecksResponse
-
-	err = json.Unmarshal(bytes, &checksResponse)
-	if err != nil {
+	checksResponse := ChecksResponse{}
+	if err = json.Unmarshal(bytes, &checksResponse); err != nil {
 		return nil, "", fmt.Errorf("decode paginated response: %w", err)
 	}
 
