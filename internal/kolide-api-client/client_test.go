@@ -48,10 +48,10 @@ func TestKolideClient(t *testing.T) {
 
 		apiClient := getKolideClientForTestServer(testServer, log)
 
-		checks, err := apiClient.GetChecks(ctx)
+		incompleteChecks, err := apiClient.GetIncompleteChecks(ctx)
 
 		assert.NoError(t, err)
-		assert.Len(t, checks, 0)
+		assert.Len(t, incompleteChecks, 0)
 	})
 
 	t.Run("invalid response body", func(t *testing.T) {
@@ -63,9 +63,9 @@ func TestKolideClient(t *testing.T) {
 
 		apiClient := getKolideClientForTestServer(testServer, log)
 
-		checks, err := apiClient.GetChecks(ctx)
+		incompleteChecks, err := apiClient.GetIncompleteChecks(ctx)
 
-		assert.Nil(t, checks)
+		assert.Nil(t, incompleteChecks)
 		assert.Error(t, err)
 	})
 
@@ -75,28 +75,29 @@ func TestKolideClient(t *testing.T) {
 
 		apiClient := getKolideClientForTestServer(testServer, log)
 
-		checks, err := apiClient.GetChecks(ctx)
+		incompleteChecks, err := apiClient.GetIncompleteChecks(ctx)
 
-		assert.Nil(t, checks)
+		assert.Nil(t, incompleteChecks)
 		assert.Error(t, err)
 	})
 
 	t.Run("multiple pages of checks", func(t *testing.T) {
 		pages := map[string]string{
-			"":      `{"data":[{"id":1},{"id":2}],"pagination":{"next_cursor":"page2"}}`,
-			"page2": `{"data":[{"id":3}],"pagination": {"next_cursor":""}}`,
+			"":      `{"data":[{"id":1},{"id":2,"tags":["foo"]}],"pagination":{"next_cursor":"page2"}}`,
+			"page2": `{"data":[{"id":3,"tags":["info"]},{"id":4}],"pagination": {"next_cursor":"page3"}}`,
+			"page3": `{"data":[{"id":5,"tags":["notice"]}],"pagination": {"next_cursor":""}}`,
 		}
 
 		testServer := getTestServer(t, pages)
 
 		apiClient := getKolideClientForTestServer(testServer, log)
 
-		checks, err := apiClient.GetChecks(ctx)
+		incompleteChecks, err := apiClient.GetIncompleteChecks(ctx)
 
 		assert.NoError(t, err)
-		assert.Len(t, checks, 3)
-		assert.Equal(t, 1, checks[0].Id)
-		assert.Equal(t, 2, checks[1].Id)
-		assert.Equal(t, 3, checks[2].Id)
+		assert.Len(t, incompleteChecks, 3)
+		assert.Equal(t, 1, incompleteChecks[0].Id)
+		assert.Equal(t, 2, incompleteChecks[1].Id)
+		assert.Equal(t, 4, incompleteChecks[2].Id)
 	})
 }

@@ -53,49 +53,35 @@ func Run(ctx context.Context) ExitCode {
 }
 
 func run(ctx context.Context, cfg *Config, log logrus.FieldLogger) error {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	kolideApiClient := kac.New(cfg.KolideApiToken, log.WithField("client", "Kolide"), kac.WithHttpClient(getHttpClient(log)))
-	slackClient := sc.New(getHttpClient(log), cfg.SlackWebhook, log.WithField("client", "Slack"))
-
-	log.Infof("validate Kolide checks")
-	timeout, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	checks, err := kolideApiClient.GetChecks(timeout)
-	cancel()
-
+	incompleteChecks, err := kac.New(
+		cfg.KolideApiToken,
+		log.WithField("client", "Kolide"),
+		kac.WithHttpClient(getHttpClient()),
+	).GetIncompleteChecks(ctx)
 	if err != nil {
 		return fmt.Errorf("get Kolide checks: %w", err)
 	}
 
-	incompleteChecks := make([]kac.Check, 0)
-	for _, check := range checks {
-		if !check.HasSeverityTag() {
-			incompleteChecks = append(incompleteChecks, check)
-		}
+	if len(incompleteChecks) == 0 {
+		log.Infof("all Kolide checks are valid")
+		return nil
 	}
 
-	log.
-		WithField("num_checks", len(checks)).
-		WithField("num_incomplete_checks", len(incompleteChecks)).
-		Infof("validated Kolide checks")
+	slackClient := sc.New(cfg.SlackWebhook, log.WithField("client", "Slack"), sc.WithHttpClient(getHttpClient()))
+	timeout, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	err = slackClient.Notify(timeout, incompleteChecks)
+	cancel()
 
-	if len(incompleteChecks) > 0 {
-		timeout, cancel = context.WithTimeout(ctx, 1*time.Minute)
-		err = slackClient.Notify(timeout, incompleteChecks)
-		cancel()
-
-		if err != nil {
-			return fmt.Errorf("notify Slack: %w", err)
-		}
+	if err != nil {
+		return fmt.Errorf("notify Slack: %w", err)
 	}
 
 	return nil
 }
 
-func getHttpClient(log logrus.FieldLogger) *http.Client {
+func getHttpClient() *http.Client {
 	retryableClient := retryablehttp.NewClient()
-	retryableClient.Logger = log
+	retryableClient.Logger = nil
 	retryableClient.RetryMax = 10
 	return retryableClient.StandardClient()
 }

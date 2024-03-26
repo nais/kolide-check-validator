@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -29,24 +30,30 @@ func New(apiToken string, log logrus.FieldLogger, opts ...Option) *KolideClient 
 	return c
 }
 
-func (kc *KolideClient) GetChecks(ctx context.Context) ([]Check, error) {
-	apiUrl, err := url.Parse(kc.baseUrl + "/checks")
+func (c *KolideClient) GetIncompleteChecks(ctx context.Context) ([]Check, error) {
+	apiUrl, err := url.Parse(c.baseUrl + "/checks")
 	if err != nil {
 		return nil, fmt.Errorf("create URL: %w", err)
 	}
 
 	query := apiUrl.Query()
-	query.Set("per_page", strconv.Itoa(100))
+	query.Set("per_page", strconv.Itoa(10))
 	apiUrl.RawQuery = query.Encode()
 
-	checks := make([]Check, 0)
+	numChecks := 0
+	incompleteChecks := make([]Check, 0)
 	for {
-		paginatedChecks, nextCursor, err := kc.getPaginatedChecks(ctx, apiUrl)
+		paginatedChecks, nextCursor, err := c.getPaginatedChecks(ctx, apiUrl)
 		if err != nil {
 			return nil, err
 		}
 
-		checks = append(checks, paginatedChecks...)
+		for _, check := range paginatedChecks {
+			numChecks++
+			if !check.HasSeverityTag() {
+				incompleteChecks = append(incompleteChecks, check)
+			}
+		}
 
 		if nextCursor == "" {
 			break
@@ -56,16 +63,24 @@ func (kc *KolideClient) GetChecks(ctx context.Context) ([]Check, error) {
 		apiUrl.RawQuery = query.Encode()
 	}
 
-	return checks, nil
+	c.log.
+		WithField("num_checks", numChecks).
+		WithField("num_incomplete_checks", len(incompleteChecks)).
+		Infof("validated Kolide checks")
+
+	return incompleteChecks, nil
 }
 
-func (kc *KolideClient) getPaginatedChecks(ctx context.Context, url *url.URL) ([]Check, string, error) {
+func (c *KolideClient) getPaginatedChecks(ctx context.Context, url *url.URL) ([]Check, string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, "", fmt.Errorf("create request: %w", err)
 	}
 
-	resp, err := kc.client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, "", fmt.Errorf("get paginated response: %w", err)
 	}
