@@ -4,7 +4,7 @@ fmt:
 	go run mvdan.cc/gofumpt@latest -w ./
 
 test:
-	go test -v ./...
+	go test ./...
 
 build:
 	go build -o ./bin/kolide-check-validator ./cmd/kolide-check-validator/

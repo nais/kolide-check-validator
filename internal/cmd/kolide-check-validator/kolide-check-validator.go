@@ -4,24 +4,60 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
 	kac "github.com/navikt/kolide-check-validator/internal/kolide-api-client"
+	"github.com/navikt/kolide-check-validator/internal/logger"
 	sc "github.com/navikt/kolide-check-validator/internal/slack-client"
+	"github.com/sethvargo/go-envconfig"
 	"github.com/sirupsen/logrus"
 )
 
-func Run(ctx context.Context, log logrus.FieldLogger) error {
+type ExitCode int
+
+const (
+	exitCodeSuccess ExitCode = iota
+	exitCodeEnvFileError
+	exitCodeConfigError
+	exitCodeLoggerError
+	exitCodeRunError
+)
+
+func Run(ctx context.Context) ExitCode {
+	log := logrus.StandardLogger()
+
+	if err := loadEnvFile(log); err != nil {
+		log.WithError(err).Errorf("error loading .env file")
+		return exitCodeEnvFileError
+	}
+
+	cfg, err := newConfig(ctx, envconfig.OsLookuper())
+	if err != nil {
+		log.WithError(err).Errorf("error when processing configuration")
+		return exitCodeConfigError
+	}
+
+	appLogger, err := logger.New(cfg.LogFormat, cfg.LogLevel)
+	if err != nil {
+		log.WithError(err).Errorf("error when creating application logger")
+		return exitCodeLoggerError
+	}
+
+	if err = run(ctx, cfg, appLogger); err != nil {
+		appLogger.WithError(err).Errorf("error in run()")
+		return exitCodeRunError
+	}
+
+	return exitCodeSuccess
+}
+
+func run(ctx context.Context, cfg *Config, log logrus.FieldLogger) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	kolideApiToken := os.Getenv("KOLIDE_API_TOKEN")
-	slackWebhook := os.Getenv("SLACK_WEBHOOK")
-
-	kolideApiClient := kac.New(getHttpClient(log), kolideApiToken, log.WithField("client", "Kolide"))
-	slackClient := sc.New(getHttpClient(log), slackWebhook, log.WithField("client", "Slack"))
+	kolideApiClient := kac.New(getHttpClient(log), cfg.KolideApiToken, log.WithField("client", "Kolide"))
+	slackClient := sc.New(getHttpClient(log), cfg.SlackWebhook, log.WithField("client", "Slack"))
 
 	log.Infof("validate Kolide checks")
 	timeout, cancel := context.WithTimeout(ctx, 1*time.Minute)
