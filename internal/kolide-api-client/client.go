@@ -37,7 +37,7 @@ func (c *KolideClient) GetIncompleteChecks(ctx context.Context) ([]Check, error)
 	}
 
 	query := apiUrl.Query()
-	query.Set("per_page", strconv.Itoa(10))
+	query.Set("per_page", strconv.Itoa(100))
 	apiUrl.RawQuery = query.Encode()
 
 	numChecks := 0
