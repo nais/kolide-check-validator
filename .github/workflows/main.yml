@@ -10,12 +10,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - id: go-version
+        run: echo "go-version=$(cat .tool-versions | awk '{print $2}')" >> $GITHUB_OUTPUT
       - uses: nais/docker-build-push@v0
         id: docker-push
         with:
           team: naisdevice
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }} # required, but is defined as an organization variable
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }} # required, but is defined as an organization secret
+          build_args: |
+            GO_VERSION=${{ steps.go-version.outputs.go-version }}-
+
       - name: Deploy to prod-gcp
         uses: nais/deploy/actions/deploy@v2
         env:
