@@ -62,4 +62,4 @@ jobs:
         env:
           CLUSTER: prod-gcp
           RESOURCE: .nais/nais.yml
-          VAR: "IMAGE=${{ steps.docker-push.outputs.image }}"
+          IMAGE: ${{ steps.docker-push.outputs.image }}
