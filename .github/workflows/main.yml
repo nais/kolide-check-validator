@@ -1,29 +1,65 @@
-name: CI/CD
-on: push
+name: Build and deploy image
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   build_and_push:
     permissions:
-      contents: "read"
-      id-token: "write"
+      contents: read
+      id-token: write
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - id: go-version
-        run: echo "go-version=$(cat .tool-versions | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Setup mise and install dependencies
+        uses: jdx/mise-action@v2
+
+      - name: Find go cache dir
+        id: go-cache
+        run: |
+          go version
+          # Clear cache dirs to avoid error when restoring
+          go clean -cache -modcache
+          echo "gocache=$(go env GOCACHE)" >> $GITHUB_OUTPUT
+          echo "gomodcache=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
+
+      - name: Cache go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.go-cache.outputs.gocache }}
+            ${{ steps.go-cache.outputs.gomodcache }}
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+
+      - name: Run tests
+        run: make test
+
+      - name: Run static analysis tools
+        run: make check
+
+      - name: Find go version
+        id: go-version
+        run: echo "version=$(mise current go)" >> $GITHUB_OUTPUT
+
+      - name: Check code format
+        run: |
+          make fmt
+          git diff --exit-code --name-only
+
       - uses: nais/docker-build-push@v0
         id: docker-push
         with:
           team: naisdevice
-          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }} # required, but is defined as an organization variable
-          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }} # required, but is defined as an organization secret
-          build_args: |
-            GO_VERSION=${{ steps.go-version.outputs.go-version }}-
+          build_args: GO_VERSION=${{ steps.go-version.outputs.version }}
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
 
       - name: Deploy to prod-gcp
         uses: nais/deploy/actions/deploy@v2
         env:
-          IMAGE: ${{ steps.docker-push.outputs.image }}
           CLUSTER: prod-gcp
-          RESOURCE: ".nais/nais.yml"
+          RESOURCE: .nais/nais.yml
+          VAR: "IMAGE=${{ steps.docker-push.outputs.image }}"

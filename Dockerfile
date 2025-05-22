@@ -1,12 +1,11 @@
-ARG GO_VERSION=""
-FROM golang:${GO_VERSION}alpine AS builder
+ARG GO_VERSION="1.24"
+FROM golang:${GO_VERSION} AS builder
 WORKDIR /src
 COPY go.* /src/
 RUN go mod download
 COPY . /src
-RUN go build -o bin/kolide-check-validator ./cmd/kolide-check-validator
+RUN go build -o ./validator ./main.go
 
 FROM gcr.io/distroless/base
-WORKDIR /app
-COPY --from=builder /src/bin/kolide-check-validator /app/kolide-check-validator
-ENTRYPOINT ["/app/kolide-check-validator"]
+COPY --from=builder /src/validator /app/validator
+ENTRYPOINT ["/app/validator"]

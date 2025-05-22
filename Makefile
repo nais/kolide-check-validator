@@ -1,22 +1,34 @@
-all: fmt test build check
+.PHONY: all
+all: fmt test check build
 
+.PHONY: fmt
 fmt:
-	go run mvdan.cc/gofumpt@latest -w ./
+	go tool mvdan.cc/gofumpt -w ./
 
+.PHONY: test
 test:
-	go test ./...
+	go test --race -v  ./...
 
-build:
-	go build -o ./bin/kolide-check-validator ./cmd/kolide-check-validator/
+.PHONY: check
+check: staticcheck vulncheck deadcode gosec
 
-check: staticcheck vulncheck deadcode
-
+.PHONY: staticcheck
 staticcheck:
-	go run honnef.co/go/tools/cmd/staticcheck@latest ./...
+	go tool honnef.co/go/tools/cmd/staticcheck ./...
 
+.PHONY: vulncheck
 vulncheck:
-	go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+	go tool golang.org/x/vuln/cmd/govulncheck ./...
 
+.PHONY: deadcode
 deadcode:
-	go run golang.org/x/tools/cmd/deadcode@latest -test ./...
+	go tool golang.org/x/tools/cmd/deadcode -test ./...
+
+.PHONY: gosec
+gosec:
+	go tool github.com/securego/gosec/v2/cmd/gosec -terse ./...
+
+.PHONY: build
+build:
+	go build -o ./bin/validator ./main.go
 

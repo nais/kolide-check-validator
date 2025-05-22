@@ -23,7 +23,7 @@ func getTestServer(t *testing.T, pages map[string]string) *httptest.Server {
 
 		cursor := request.URL.Query().Get("cursor")
 
-		_, err := fmt.Fprintf(writer, pages[cursor])
+		_, err := fmt.Fprint(writer, pages[cursor])
 		assert.NoError(t, err)
 	})
 	return httptest.NewServer(mux)
