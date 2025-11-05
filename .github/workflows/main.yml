@@ -11,41 +11,13 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup mise and install dependencies
-        uses: jdx/mise-action@v2
-
-      - name: Find go cache dir
-        id: go-cache
-        run: |
-          go version
-          # Clear cache dirs to avoid error when restoring
-          go clean -cache -modcache
-          echo "gocache=$(go env GOCACHE)" >> $GITHUB_OUTPUT
-          echo "gomodcache=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
-
-      - name: Cache go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ steps.go-cache.outputs.gocache }}
-            ${{ steps.go-cache.outputs.gomodcache }}
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-
-      - name: Run tests
-        run: make test
-
-      - name: Run static analysis tools
-        run: make check
-
-      - name: Find go version
-        id: go-version
+      - uses: actions/checkout@v5
+      - uses: jdx/mise-action@v3
+      - run: make test
+      - run: make check
+      - id: go-version
         run: echo "version=$(mise current go)" >> $GITHUB_OUTPUT
-
-      - name: Check code format
-        run: |
+      - run: |
           make fmt
           git diff --exit-code --name-only
 
