@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-
 jobs:
   build_and_push:
     permissions:
@@ -20,7 +19,6 @@ jobs:
       - run: |
           make fmt
           git diff --exit-code --name-only
-
       - uses: nais/docker-build-push@v0
         id: docker-push
         with:
@@ -28,9 +26,7 @@ jobs:
           build_args: GO_VERSION=${{ steps.go-version.outputs.version }}
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
-
-      - name: Deploy to prod-gcp
-        uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: prod-gcp
           RESOURCE: .nais/nais.yml
