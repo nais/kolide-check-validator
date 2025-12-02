@@ -10,7 +10,7 @@ import (
 
 func loadEnvFile(log logrus.FieldLogger) error {
 	if _, err := os.Stat(".env"); errors.Is(err, os.ErrNotExist) {
-		log.Infof("no .env file found")
+		log.Info("no .env file found")
 		return nil
 	}
 
@@ -18,6 +18,6 @@ func loadEnvFile(log logrus.FieldLogger) error {
 		return err
 	}
 
-	log.Infof("loaded .env file")
+	log.Info("loaded .env file")
 	return nil
 }

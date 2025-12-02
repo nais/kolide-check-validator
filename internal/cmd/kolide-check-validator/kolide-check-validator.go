@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/go-retryablehttp"
-	kac "github.com/nais/kolide-check-validator/internal/kolide-api-client"
+	"github.com/nais/kolide-check-validator/internal/kolide"
 	"github.com/nais/kolide-check-validator/internal/logger"
-	sc "github.com/nais/kolide-check-validator/internal/slack-client"
+	"github.com/nais/kolide-check-validator/internal/slack"
 	"github.com/sethvargo/go-envconfig"
 	"github.com/sirupsen/logrus"
 )
@@ -27,19 +27,19 @@ func Run(ctx context.Context) ExitCode {
 	log := logrus.StandardLogger()
 
 	if err := loadEnvFile(log); err != nil {
-		log.WithError(err).Errorf("error loading .env file")
+		log.WithError(err).Error("error loading .env file")
 		return exitCodeEnvFileError
 	}
 
 	cfg, err := newConfig(ctx, envconfig.OsLookuper())
 	if err != nil {
-		log.WithError(err).Errorf("error when processing configuration")
+		log.WithError(err).Error("error when processing configuration")
 		return exitCodeConfigError
 	}
 
 	appLogger, err := logger.New(cfg.LogFormat, cfg.LogLevel)
 	if err != nil {
-		log.WithError(err).Errorf("error when creating application logger")
+		log.WithError(err).Error("error when creating application logger")
 		return exitCodeLoggerError
 	}
 
@@ -52,25 +52,25 @@ func Run(ctx context.Context) ExitCode {
 }
 
 func run(ctx context.Context, cfg *Config, log logrus.FieldLogger) error {
-	incompleteChecks, err := kac.New(
+	incompleteChecks, err := kolide.New(
 		cfg.KolideApiToken,
 		log.WithField("client", "Kolide"),
-		kac.WithHttpClient(getHttpClient()),
+		kolide.WithHttpClient(getHttpClient()),
 	).GetIncompleteChecks(ctx)
 	if err != nil {
 		return fmt.Errorf("get Kolide checks: %w", err)
 	}
 
 	if len(incompleteChecks) == 0 {
-		log.Infof("all Kolide checks are valid, no notification sent")
+		log.Info("all Kolide checks are valid, no notification sent")
 		return nil
 	}
 
-	err = sc.
+	err = slack.
 		New(
 			cfg.SlackWebhook,
 			log.WithField("client", "Slack"),
-			sc.WithHttpClient(getHttpClient()),
+			slack.WithHttpClient(getHttpClient()),
 		).
 		Notify(ctx, incompleteChecks)
 	if err != nil {

@@ -1,4 +1,4 @@
-package kolide_api_client
+package kolide
 
 import (
 	"context"
@@ -8,15 +8,80 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
 )
 
-func New(apiToken string, log logrus.FieldLogger, opts ...Option) *KolideClient {
-	c := &KolideClient{
-		baseUrl: "https://k2.kolide.com/api/v0",
-		client: &httpClient{
+type OptionFunc func(*Client)
+
+func WithBaseUrl(baseUrl string) OptionFunc {
+	return func(c *Client) { c.baseUrl = baseUrl }
+}
+
+func WithHttpClient(client *http.Client) OptionFunc {
+	return func(c *Client) { c.httpClient.client = client }
+}
+
+type Client struct {
+	baseUrl    string
+	httpClient *httpClient
+	log        logrus.FieldLogger
+}
+
+type ChecksResponse struct {
+	Checks     []Check `json:"data"`
+	Pagination struct {
+		NextCursor string `json:"next_cursor"`
+	} `json:"pagination"`
+}
+
+type CheckTag struct {
+	Name string `json:"name"`
+}
+
+type Check struct {
+	ID   string     `json:"id"`
+	Name string     `json:"name"`
+	Tags []CheckTag `json:"check_tags"`
+}
+
+func (c *Check) HasSeverityTag() bool {
+	if c == nil {
+		return false
+	}
+
+	severityTags := []string{"info", "notice", "warning", "danger", "critical"}
+	for _, tag := range c.Tags {
+		tagName := strings.ToLower(tag.Name)
+		for _, severityTag := range severityTags {
+			if tagName == severityTag {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+type httpClient struct {
+	client   *http.Client
+	apiToken string
+}
+
+func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
+	req.Header.Set("Authorization", "Bearer "+c.apiToken)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Kolide-API-Version", "2023-05-26")
+
+	return c.client.Do(req)
+}
+
+func New(apiToken string, log logrus.FieldLogger, opts ...OptionFunc) *Client {
+	c := &Client{
+		baseUrl: "https://api.kolide.com",
+		httpClient: &httpClient{
 			client:   http.DefaultClient,
 			apiToken: apiToken,
 		},
@@ -30,7 +95,7 @@ func New(apiToken string, log logrus.FieldLogger, opts ...Option) *KolideClient 
 	return c
 }
 
-func (c *KolideClient) GetIncompleteChecks(ctx context.Context) ([]Check, error) {
+func (c *Client) GetIncompleteChecks(ctx context.Context) ([]Check, error) {
 	apiUrl, err := url.Parse(c.baseUrl + "/checks")
 	if err != nil {
 		return nil, fmt.Errorf("create URL: %w", err)
@@ -66,12 +131,12 @@ func (c *KolideClient) GetIncompleteChecks(ctx context.Context) ([]Check, error)
 	c.log.
 		WithField("num_checks", numChecks).
 		WithField("num_incomplete_checks", len(incompleteChecks)).
-		Infof("validated Kolide checks")
+		Info("validated Kolide checks")
 
 	return incompleteChecks, nil
 }
 
-func (c *KolideClient) getPaginatedChecks(ctx context.Context, url *url.URL) ([]Check, string, error) {
+func (c *Client) getPaginatedChecks(ctx context.Context, url *url.URL) ([]Check, string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
@@ -80,7 +145,7 @@ func (c *KolideClient) getPaginatedChecks(ctx context.Context, url *url.URL) ([]
 		return nil, "", fmt.Errorf("create request: %w", err)
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, "", fmt.Errorf("get paginated response: %w", err)
 	}

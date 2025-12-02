@@ -1,6 +1,6 @@
 module github.com/nais/kolide-check-validator
 
-go 1.25.4
+go 1.25.5
 
 tool (
 	github.com/securego/gosec/v2/cmd/gosec
@@ -15,7 +15,6 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.11.1
 )
 
 require (
@@ -25,7 +24,6 @@ require (
 	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/anthropics/anthropic-sdk-go v1.13.0 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.4 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -37,7 +35,6 @@ require (
 	github.com/gookit/color v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/securego/gosec/v2 v2.22.10 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
