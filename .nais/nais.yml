@@ -12,7 +12,7 @@ spec:
       external:
       - host: slack.com
       - host: hooks.slack.com
-      - host: k2.kolide.com
+      - host: api.kolide.com
   backoffLimit: 0
   completions: 1
   envFrom:
