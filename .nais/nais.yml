@@ -2,10 +2,10 @@ apiVersion: nais.io/v1
 kind: Naisjob
 metadata:
   name: kolide-check-validator
-  namespace: naisdevice
+  namespace: nais
   labels:
     app: kolide-check-validator
-    team: naisdevice
+    team: nais
 spec:
   accessPolicy:
     outbound:
@@ -36,9 +36,9 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   labels:
-    team: naisdevice
+    team: nais
   name: kolide-check-validator
-  namespace: naisdevice
+  namespace: nais
 spec:
   groups:
   - name: kolide-check-validator
@@ -47,11 +47,11 @@ spec:
       annotations:
         action: |
           Check if CronJob -> Job -> pod has run successfully:
-          - `kubectl describe cronjob -n naisdevice kolide-check-validator`
-          - `kubectl describe pod -n naisdevice -l app=kolide-check-validator`
-          - `kubectl logs -n naisdevice -l app=kolide-check-validator -c kolide-check-validator --prefix=true`
+          - `kubectl describe cronjob -n nais kolide-check-validator`
+          - `kubectl describe pod -n nais -l app=kolide-check-validator`
+          - `kubectl logs -n nais -l app=kolide-check-validator -c kolide-check-validator --prefix=true`
       expr: 'time() - max(kube_job_status_completion_time{job_name=~"kolide-check-validator-.+"}) > (60*30)'
       for: 1m
       labels:
-        namespace: naisdevice
+        namespace: nais
         severity: warning
