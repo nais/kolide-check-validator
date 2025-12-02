@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/go-retryablehttp"
-	kac "github.com/navikt/kolide-check-validator/internal/kolide-api-client"
-	"github.com/navikt/kolide-check-validator/internal/logger"
-	sc "github.com/navikt/kolide-check-validator/internal/slack-client"
+	kac "github.com/nais/kolide-check-validator/internal/kolide-api-client"
+	"github.com/nais/kolide-check-validator/internal/logger"
+	sc "github.com/nais/kolide-check-validator/internal/slack-client"
 	"github.com/sethvargo/go-envconfig"
 	"github.com/sirupsen/logrus"
 )

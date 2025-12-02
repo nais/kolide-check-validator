@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	kac "github.com/navikt/kolide-check-validator/internal/kolide-api-client"
+	kac "github.com/nais/kolide-check-validator/internal/kolide-api-client"
 	"github.com/sirupsen/logrus"
 )
 
@@ -108,7 +108,7 @@ func getRequestBody(checks []kac.Check) ([]byte, error) {
 		Elements: []Text{
 			{
 				Type: "mrkdwn",
-				Text: "This message has been brought to you by <https://github.com/navikt/kolide-check-validator|navikt/kolide-check-validator>",
+				Text: "This message has been brought to you by <https://github.com/nais/kolide-check-validator|nais/kolide-check-validator>",
 			},
 		},
 	})

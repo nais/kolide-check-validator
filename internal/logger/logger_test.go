@@ -3,7 +3,7 @@ package logger_test
 import (
 	"testing"
 
-	"github.com/navikt/kolide-check-validator/internal/logger"
+	"github.com/nais/kolide-check-validator/internal/logger"
 )
 
 func TestNew(t *testing.T) {

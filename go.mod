@@ -1,4 +1,4 @@
-module github.com/navikt/kolide-check-validator
+module github.com/nais/kolide-check-validator
 
 go 1.25.4
 
