@@ -53,7 +53,7 @@ func (c *Check) HasSeverityTag() bool {
 		return false
 	}
 
-	severityTags := []string{"info", "notice", "warning", "danger", "critical"}
+	severityTags := []string{"info", "notice", "attention", "warning", "danger", "critical"}
 	for _, tag := range c.Tags {
 		tagName := strings.ToLower(tag.Name)
 		if slices.Contains(severityTags, tagName) {
