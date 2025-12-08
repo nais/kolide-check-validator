@@ -6,9 +6,11 @@ updates:
       interval: "monthly"
   - package-ecosystem: "docker"
     directory: "/"
+    cooldown: 7d
     schedule:
       interval: "monthly"
   - package-ecosystem: "gomod"
     directory: "/"
+    cooldown: 7d
     schedule:
       interval: "monthly"
