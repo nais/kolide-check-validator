@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -55,10 +56,8 @@ func (c *Check) HasSeverityTag() bool {
 	severityTags := []string{"info", "notice", "warning", "danger", "critical"}
 	for _, tag := range c.Tags {
 		tagName := strings.ToLower(tag.Name)
-		for _, severityTag := range severityTags {
-			if tagName == severityTag {
-				return true
-			}
+		if slices.Contains(severityTags, tagName) {
+			return true
 		}
 	}
 
