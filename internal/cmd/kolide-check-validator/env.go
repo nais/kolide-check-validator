@@ -1,4 +1,4 @@
-package kolide_check_validator
+package kolidecheckvalidator
 
 import (
 	"errors"

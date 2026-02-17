@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"slices"
 	"strconv"
@@ -17,16 +18,16 @@ import (
 
 type OptionFunc func(*Client)
 
-func WithBaseUrl(baseUrl string) OptionFunc {
-	return func(c *Client) { c.baseUrl = baseUrl }
+func WithBaseURL(baseURL string) OptionFunc {
+	return func(c *Client) { c.baseURL = baseURL }
 }
 
-func WithHttpClient(client *http.Client) OptionFunc {
+func WithHTTPClient(client *http.Client) OptionFunc {
 	return func(c *Client) { c.httpClient.client = client }
 }
 
 type Client struct {
-	baseUrl    string
+	baseURL    string
 	httpClient *httpClient
 	log        logrus.FieldLogger
 }
@@ -74,12 +75,12 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("X-Kolide-API-Version", "2023-05-26")
 
-	return c.client.Do(req)
+	return c.client.Do(req) // #nosec G704 -- URL is validated by validateBaseURL
 }
 
 func New(apiToken string, log logrus.FieldLogger, opts ...OptionFunc) *Client {
 	c := &Client{
-		baseUrl: "https://api.kolide.com",
+		baseURL: "https://api.kolide.com",
 		httpClient: &httpClient{
 			client:   http.DefaultClient,
 			apiToken: apiToken,
@@ -95,19 +96,23 @@ func New(apiToken string, log logrus.FieldLogger, opts ...OptionFunc) *Client {
 }
 
 func (c *Client) GetIncompleteChecks(ctx context.Context) ([]Check, error) {
-	apiUrl, err := url.Parse(c.baseUrl + "/checks")
+	if err := validateBaseURL(c.baseURL); err != nil {
+		return nil, fmt.Errorf("invalid Kolide base URL: %w", err)
+	}
+
+	apiURL, err := url.Parse(c.baseURL + "/checks")
 	if err != nil {
 		return nil, fmt.Errorf("create URL: %w", err)
 	}
 
-	query := apiUrl.Query()
+	query := apiURL.Query()
 	query.Set("per_page", strconv.Itoa(100))
-	apiUrl.RawQuery = query.Encode()
+	apiURL.RawQuery = query.Encode()
 
 	numChecks := 0
 	incompleteChecks := make([]Check, 0)
 	for {
-		paginatedChecks, nextCursor, err := c.getPaginatedChecks(ctx, apiUrl)
+		paginatedChecks, nextCursor, err := c.getPaginatedChecks(ctx, apiURL)
 		if err != nil {
 			return nil, err
 		}
@@ -124,7 +129,7 @@ func (c *Client) GetIncompleteChecks(ctx context.Context) ([]Check, error) {
 		}
 
 		query.Set("cursor", nextCursor)
-		apiUrl.RawQuery = query.Encode()
+		apiURL.RawQuery = query.Encode()
 	}
 
 	c.log.
@@ -148,6 +153,7 @@ func (c *Client) getPaginatedChecks(ctx context.Context, url *url.URL) ([]Check,
 	if err != nil {
 		return nil, "", fmt.Errorf("get paginated response: %w", err)
 	}
+	defer resp.Body.Close()
 
 	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -164,4 +170,34 @@ func (c *Client) getPaginatedChecks(ctx context.Context, url *url.URL) ([]Check,
 	}
 
 	return checksResponse.Checks, checksResponse.Pagination.NextCursor, nil
+}
+
+func validateBaseURL(rawBaseURL string) error {
+	parsed, err := url.Parse(rawBaseURL)
+	if err != nil {
+		return fmt.Errorf("parse base URL: %w", err)
+	}
+
+	if parsed.Scheme != "https" && !(parsed.Scheme == "http" && isLoopbackHost(parsed.Hostname())) {
+		return fmt.Errorf("unsupported URL scheme %q", parsed.Scheme)
+	}
+
+	if parsed.Hostname() == "" {
+		return fmt.Errorf("missing host")
+	}
+
+	return nil
+}
+
+func isLoopbackHost(host string) bool {
+	if strings.EqualFold(host, "localhost") {
+		return true
+	}
+
+	ip, err := netip.ParseAddr(host)
+	if err != nil {
+		return false
+	}
+
+	return ip.IsLoopback()
 }

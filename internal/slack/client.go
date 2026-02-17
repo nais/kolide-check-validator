@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/netip"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/nais/kolide-check-validator/internal/kolide"
@@ -43,7 +46,7 @@ type Element struct {
 
 type OptionFunc func(client *Client)
 
-func WithHttpClient(client *http.Client) OptionFunc {
+func WithHTTPClient(client *http.Client) OptionFunc {
 	return func(c *Client) { c.httpClient = client }
 }
 
@@ -80,15 +83,20 @@ func (c *Client) Notify(ctx context.Context, checks []kolide.Check) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
+	if err := validateWebhookURL(c.slackWebhook); err != nil {
+		return fmt.Errorf("invalid Slack webhook URL: %w", err)
+	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.slackWebhook, body)
 	if err != nil {
 		return fmt.Errorf("create request: %w", err)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.httpClient.Do(req) // #nosec G704 -- URL is validated by validateWebhookURL
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		responseBytes, err := io.ReadAll(resp.Body)
@@ -101,6 +109,36 @@ func (c *Client) Notify(ctx context.Context, checks []kolide.Check) error {
 
 	c.log.Info("notification sent")
 	return nil
+}
+
+func validateWebhookURL(rawWebhookURL string) error {
+	parsed, err := url.Parse(rawWebhookURL)
+	if err != nil {
+		return fmt.Errorf("parse webhook URL: %w", err)
+	}
+
+	if parsed.Scheme != "https" && !(parsed.Scheme == "http" && isLoopbackHost(parsed.Hostname())) {
+		return fmt.Errorf("unsupported URL scheme %q", parsed.Scheme)
+	}
+
+	if parsed.Hostname() == "" {
+		return fmt.Errorf("missing host")
+	}
+
+	return nil
+}
+
+func isLoopbackHost(host string) bool {
+	if strings.EqualFold(host, "localhost") {
+		return true
+	}
+
+	ip, err := netip.ParseAddr(host)
+	if err != nil {
+		return false
+	}
+
+	return ip.IsLoopback()
 }
 
 func getRequestBody(checks []kolide.Check) (io.Reader, error) {
