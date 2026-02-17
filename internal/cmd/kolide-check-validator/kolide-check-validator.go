@@ -1,4 +1,4 @@
-package kolide_check_validator
+package kolidecheckvalidator
 
 import (
 	"context"
@@ -53,9 +53,9 @@ func Run(ctx context.Context) ExitCode {
 
 func run(ctx context.Context, cfg *Config, log logrus.FieldLogger) error {
 	incompleteChecks, err := kolide.New(
-		cfg.KolideApiToken,
+		cfg.KolideAPIToken,
 		log.WithField("client", "Kolide"),
-		kolide.WithHttpClient(getHttpClient()),
+		kolide.WithHTTPClient(getHTTPClient()),
 	).GetIncompleteChecks(ctx)
 	if err != nil {
 		return fmt.Errorf("get Kolide checks: %w", err)
@@ -70,7 +70,7 @@ func run(ctx context.Context, cfg *Config, log logrus.FieldLogger) error {
 		New(
 			cfg.SlackWebhook,
 			log.WithField("client", "Slack"),
-			slack.WithHttpClient(getHttpClient()),
+			slack.WithHTTPClient(getHTTPClient()),
 		).
 		Notify(ctx, incompleteChecks)
 	if err != nil {
@@ -80,7 +80,7 @@ func run(ctx context.Context, cfg *Config, log logrus.FieldLogger) error {
 	return nil
 }
 
-func getHttpClient() *http.Client {
+func getHTTPClient() *http.Client {
 	retryableClient := retryablehttp.NewClient()
 	retryableClient.Logger = nil
 	retryableClient.RetryMax = 10

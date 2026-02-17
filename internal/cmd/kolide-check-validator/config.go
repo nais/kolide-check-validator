@@ -1,4 +1,4 @@
-package kolide_check_validator
+package kolidecheckvalidator
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	KolideApiToken string `env:"KOLIDE_API_TOKEN"`
+	KolideAPIToken string `env:"KOLIDE_API_TOKEN"`
 	SlackWebhook   string `env:"SLACK_WEBHOOK"`
 	LogFormat      string `env:"LOG_FORMAT,default=json"`
 	LogLevel       string `env:"LOG_LEVEL,default=info"`

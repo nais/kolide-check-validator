@@ -158,5 +158,5 @@ func getTestServer(t *testing.T, pages map[string]string) *httptest.Server {
 }
 
 func getKolideClientForTestServer(server *httptest.Server, log logrus.FieldLogger) *kolide.Client {
-	return kolide.New(apiToken, log, kolide.WithHttpClient(server.Client()), kolide.WithBaseUrl(server.URL))
+	return kolide.New(apiToken, log, kolide.WithHTTPClient(server.Client()), kolide.WithBaseURL(server.URL))
 }
