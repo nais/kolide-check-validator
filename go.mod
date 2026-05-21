@@ -1,6 +1,6 @@
 module github.com/nais/kolide-check-validator
 
-go 1.25.7
+go 1.26.3
 
 tool (
 	github.com/securego/gosec/v2/cmd/gosec
