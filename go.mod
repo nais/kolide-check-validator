@@ -1,6 +1,6 @@
 module github.com/nais/kolide-check-validator
 
-go 1.26.3
+go 1.26.5
 
 tool (
 	github.com/securego/gosec/v2/cmd/gosec
@@ -14,7 +14,7 @@ tool (
 require (
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/joho/godotenv v1.5.1
-	github.com/sethvargo/go-envconfig v1.3.0
+	github.com/sethvargo/go-envconfig v1.4.3
 	github.com/sirupsen/logrus v1.9.4
 )
 
@@ -70,7 +70,7 @@ require (
 	golang.org/x/net v0.50.0 // indirect
 	golang.org/x/oauth2 v0.35.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260213145524-e0ab670178e1 // indirect
 	golang.org/x/text v0.34.0 // indirect
 	golang.org/x/tools v0.42.0 // indirect
