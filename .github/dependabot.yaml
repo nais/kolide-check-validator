@@ -4,6 +4,10 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    groups:
+      gha:
+        pattern:
+          - '*'
   - package-ecosystem: "docker"
     directory: "/"
     cooldown:
@@ -16,3 +20,7 @@ updates:
       default-days: 7
     schedule:
       interval: "monthly"
+    groups:
+      gomod:
+        pattern:
+          - '*'
