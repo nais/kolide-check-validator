@@ -6,7 +6,7 @@ updates:
       interval: "monthly"
     groups:
       gha:
-        pattern:
+        patterns:
           - '*'
   - package-ecosystem: "docker"
     directory: "/"
@@ -22,5 +22,5 @@ updates:
       interval: "monthly"
     groups:
       gomod:
-        pattern:
+        patterns:
           - '*'
